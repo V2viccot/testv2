@@ -1,0 +1,2365 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Aluminum Processor Advance</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f0f4f8;--surface:#fff;--surface2:#f0f4f8;--border:#d1dae6;
+  --accent:#1F4E79;--accent2:#2E75B6;--accent3:#E8A020;
+  --text:#1a2332;--text-muted:#6b7c93;
+  --danger:#8b2020;--ok:#2d7d46;--warn:#7a5c0a;--err:#8b2020;
+  --primary:#1F4E79;--primary-l:#2E75B6;
+  /* advance compat */
+  --card:#fff;--r:10px;
+  --ok-bg:#eaf3ee;--warn-bg:#fdf3dc;--err-bg:#fdeaea;
+  --muted:#6b7c93;
+}
+body{font-family:'Prompt',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.5;overflow-x:hidden}
+/* no bg grid */
+
+/* ── NAV TABS ── */
+.app-nav{position:sticky;top:0;z-index:100;background:#1F4E79;border-bottom:2px solid #163a5e;display:flex;align-items:center;padding:0 24px;gap:0}
+.app-logo{font-family:'Prompt',sans-serif;font-size:13px;font-weight:600;color:#fff;letter-spacing:1px;margin-right:32px;white-space:nowrap;padding:16px 0}
+.tab-btn{padding:16px 20px;font-size:13px;font-weight:500;font-family:'Prompt',sans-serif;color:rgba(255,255,255,0.6);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;transition:all 0.2s;white-space:nowrap;display:flex;align-items:center;gap:6px}
+.tab-btn:hover{color:#fff}
+.tab-btn.active{color:#fff;border-bottom-color:#fff}
+.tab-badge{background:#E8A020;color:#fff;font-size:10px;font-weight:700;font-family:'Prompt',sans-serif;padding:1px 6px;border-radius:10px;min-width:18px;text-align:center}
+.tab-badge.dim{background:rgba(255,255,255,0.2);color:rgba(255,255,255,0.7)}
+
+/* ── PAGES ── */
+.page{display:none;position:relative;z-index:1}
+.page.active{display:block}
+
+/* ════════════════════════════
+   PAGE 1 — PROCESSOR
+════════════════════════════ */
+.p1-wrap{max-width:1100px;margin:0 auto;padding:32px 24px}
+.p1-header{margin-bottom:32px}
+.badge-pill{display:inline-flex;align-items:center;gap:6px;background:rgba(31,78,121,0.08);border:1px solid rgba(31,78,121,0.3);color:var(--primary);font-size:11px;font-family:'Prompt',sans-serif;letter-spacing:2px;text-transform:uppercase;padding:4px 12px;border-radius:2px;margin-bottom:14px}
+.badge-pill::before{content:'';width:6px;height:6px;background:var(--primary);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+.p1-header h1{font-size:28px;font-weight:700;letter-spacing:-0.5px;margin-bottom:6px}
+.p1-header h1 span{color:var(--primary)}
+.p1-header p{color:var(--text-muted);font-size:13px}
+
+.drop-zone{border:2px dashed var(--border);border-radius:12px;padding:48px 40px;text-align:center;cursor:pointer;transition:all 0.2s;background:#fff;position:relative;overflow:hidden;margin-bottom:20px}
+.drop-zone::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(31,78,121,0.04) 0%,transparent 70%);opacity:0;transition:opacity 0.3s}
+.drop-zone:hover,.drop-zone.dragover{border-color:var(--primary);background:#f4f8fc}
+.drop-zone:hover::before,.drop-zone.dragover::before{opacity:1}
+.drop-icon{font-size:44px;margin-bottom:12px;display:block;transition:transform 0.2s}
+.drop-zone:hover .drop-icon{transform:scale(1.1)}
+.drop-title{font-size:15px;font-weight:500;margin-bottom:4px}
+.drop-sub{font-size:12px;color:var(--text-muted)}
+.drop-sub span{color:var(--accent);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+#fileInput{display:none}
+
+.file-info{display:none;align-items:center;gap:12px;background:#fff;border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:20px;font-size:13px}
+.file-info.show{display:flex}
+.file-name{font-weight:500;font-family:'Prompt',sans-serif;font-size:12px}
+.file-size{color:var(--text-muted);font-size:11px;margin-top:2px}
+.btn-remove{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:18px;padding:4px;line-height:1;transition:color 0.2s}
+.btn-remove:hover{color:var(--danger)}
+
+.btn-process{width:100%;padding:13px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;font-family:'Prompt',sans-serif;cursor:pointer;transition:all 0.2s;margin-bottom:28px;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-process:hover{background:var(--primary-l);transform:translateY(-1px)}
+.btn-process:disabled{background:var(--border);color:var(--text-muted);cursor:not-allowed;transform:none}
+
+.stats-bar{display:none;gap:10px;margin-bottom:20px}
+.stats-bar.show{display:flex}
+.stat-card{flex:1;background:#fff;border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center}
+.stat-num{font-size:26px;font-weight:700;font-family:'Prompt',sans-serif;color:var(--primary);line-height:1;margin-bottom:3px}
+.stat-label{font-size:11px;color:var(--text-muted)}
+
+.p1-results{display:none}
+.p1-results.show{display:block}
+.p1-results-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px}
+.p1-results-title{font-size:13px;color:var(--text-muted);font-family:'Prompt',sans-serif}
+
+.btn-row{display:flex;gap:8px;flex-wrap:wrap}
+.btn-dl{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:6px;font-size:12px;font-weight:600;font-family:'Prompt',sans-serif;cursor:pointer;transition:all 0.2s;border:1px solid}
+.btn-dl-excel{background:var(--ok-bg);border-color:#a8d5b5;color:var(--ok)}
+.btn-dl-excel:hover{background:#c8ecd5;border-color:var(--ok)}
+.btn-goto-advance{background:#e8f0fb;border-color:#b8d0ee;color:var(--primary);font-weight:700}
+.btn-goto-advance:hover{background:#d0e4f7;border-color:var(--primary)}
+
+.search-bar{margin-bottom:10px}
+.search-input{width:100%;background:#fff;border:1px solid var(--border);border-radius:6px;padding:8px 14px;color:var(--text);font-size:13px;font-family:'Prompt',sans-serif;outline:none;transition:border-color 0.2s}
+.search-input:focus{border-color:var(--accent)}
+.search-input::placeholder{color:var(--text-muted)}
+
+.table-wrap{border:1px solid var(--border);border-radius:10px;overflow:hidden;overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead tr{background:#f0f4f8}
+th{padding:11px 13px;text-align:left;font-weight:600;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);font-family:'Prompt',sans-serif;border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none}
+th:hover{color:var(--text)}
+.sorted{color:var(--accent)}
+tbody tr{border-bottom:1px solid rgba(42,48,69,0.5);transition:background 0.1s}
+tbody tr:nth-child(even){background:#f8fafc}
+tbody tr:hover{background:#e8eef5}
+td{padding:9px 13px;vertical-align:middle}
+.td-sheet{font-family:'Prompt',sans-serif;font-size:10px;color:var(--text-muted)}
+.td-code{font-weight:600;font-family:'Prompt',sans-serif;font-size:12px;color:var(--primary)}
+.td-profile{color:var(--text);max-width:240px}
+.td-size{font-family:'Prompt',sans-serif;font-size:12px;text-align:right}
+.td-qty{font-family:'Prompt',sans-serif;font-size:13px;font-weight:700;text-align:right;color:var(--ok)}
+.no-data{text-align:center;padding:40px;color:var(--text-muted);font-size:13px}
+.pagination{display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:12px;color:var(--text-muted);flex-wrap:wrap;gap:6px}
+.page-btns{display:flex;gap:3px}
+.page-btn{background:#fff;border:1px solid var(--border);color:var(--text);padding:4px 9px;border-radius:4px;cursor:pointer;font-size:11px;transition:all 0.15s}
+.page-btn:hover,.page-btn.active{background:var(--primary);border-color:var(--primary);color:#fff;font-weight:700}
+.page-btn:disabled{opacity:0.3;cursor:not-allowed}
+
+.loading{display:none;align-items:center;justify-content:center;gap:10px;padding:20px;color:var(--text-muted);font-size:13px}
+.loading.show{display:flex}
+.spinner{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 0.7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.error-msg{display:none;background:rgba(255,77,109,0.1);border:1px solid rgba(255,77,109,0.3);color:var(--danger);border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:14px}
+.error-msg.show{display:block}
+
+/* Transfer banner */
+.transfer-banner{display:none;align-items:center;justify-content:space-between;gap:12px;background:#e8f0fb;border:1px solid #b8d0ee;border-radius:10px;padding:14px 18px;margin-bottom:20px;flex-wrap:wrap}
+.transfer-banner.show{display:flex}
+.transfer-info{font-size:13px;color:var(--primary)}
+.transfer-info strong{font-weight:700}
+.btn-transfer{background:var(--primary);color:#fff;border:none;border-radius:7px;padding:9px 20px;font-size:13px;font-weight:700;font-family:'Prompt',sans-serif;cursor:pointer;transition:all 0.2s;white-space:nowrap}
+.btn-transfer:hover{background:var(--primary-l);transform:translateY(-1px)}
+
+/* ════════════════════════════
+   PAGE 2 — ADVANCE OPTIMIZER
+   (reuse advance CSS variables)
+════════════════════════════ */
+.p2-wrap{max-width:1200px;margin:0 auto;padding:20px 16px}
+
+/* override advance styles for dark theme */
+.hdr2{background:var(--primary);color:#fff;padding:16px 24px;display:flex;align-items:center;gap:14px;border-bottom:none;margin-bottom:0}
+.hdr2-icon{width:38px;height:38px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px}
+.hdr2 h2{font-size:16px;font-weight:700;color:#fff}
+.hdr2 p{font-size:11px;color:rgba(255,255,255,0.7);margin-top:2px}
+
+/* Advance-specific overrides for dark mode */
+#page2 .card{background:#fff;border:1px solid var(--border);border-radius:var(--r);margin-bottom:14px;overflow:hidden}
+#page2 .card-head{background:var(--primary);color:#fff;padding:10px 16px;font-weight:600;font-size:13px;display:flex;align-items:center;justify-content:space-between;gap:8px;border-bottom:none}
+#page2 .card-body{padding:14px;background:#fff}
+#page2 input,#page2 select{border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:13px;background:#fff;color:var(--text);height:34px;font-family:'Prompt',sans-serif;width:100%}
+#page2 input:focus,#page2 select:focus{outline:2px solid var(--primary-l);border-color:var(--primary-l)}
+#page2 .ptable{width:100%;border-collapse:collapse;font-size:13px}
+#page2 .ptable th{background:#f0f4f8;color:var(--muted);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;padding:8px 10px;border-bottom:1px solid var(--border);text-align:left}
+#page2 .ptable td{padding:6px 8px;border-bottom:1px solid var(--border)}
+#page2 .ptable tr:last-child td{border-bottom:none}
+#page2 .ptable td input,#page2 .ptable td select{border:1px solid transparent;background:transparent;height:30px}
+#page2 .ptable td input:hover,#page2 .ptable td select:hover{border-color:var(--border);background:#fff}
+#page2 .pctable{width:100%;border-collapse:collapse;font-size:13px;min-width:600px}
+#page2 .pctable th{background:#f0f4f8;color:var(--muted);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;padding:8px 10px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
+#page2 .pctable td{padding:5px 6px;border-bottom:1px solid var(--border);vertical-align:middle}
+#page2 .pctable tr:last-child td{border-bottom:none}
+#page2 .pctable td input,#page2 .pctable td select{border:1px solid transparent;background:transparent;height:30px}
+#page2 .pctable td input:hover,#page2 .pctable td select:hover{border-color:var(--border);background:#fff}
+#page2 .pctable td:last-child{width:36px;text-align:center}
+#page2 .tbl-wrap{overflow-x:auto}
+#page2 .btn{border:none;border-radius:6px;padding:7px 13px;font-size:13px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:opacity .15s,transform .1s;font-family:'Prompt',sans-serif;height:34px;white-space:nowrap}
+#page2 .btn:active{transform:scale(.97)}
+#page2 .btn-p{background:var(--primary);color:#fff}.btn-p:hover{opacity:.85}
+#page2 .btn-s{background:#e8eef5;color:var(--primary)}.btn-s:hover{background:var(--border)}
+#page2 .btn-a{background:var(--accent3);color:#fff}.btn-a:hover{opacity:.85}
+#page2 .btn-d{background:var(--err-bg);color:var(--err)}.btn-d:hover{background:rgba(255,77,109,0.2)}
+#page2 .btn-g{background:var(--ok-bg);color:var(--ok)}.btn-g:hover{background:rgba(0,212,170,0.2)}
+#page2 .btn-sm{height:28px;padding:3px 9px;font-size:12px;border-radius:5px}
+#page2 .btn-big{padding:11px 28px;font-size:15px;height:auto;border-radius:8px}
+#page2 .fg{display:flex;flex-direction:column;gap:4px}
+#page2 .fg label{font-size:11px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+#page2 .stats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+#page2 .scard{flex:1;min-width:90px;background:#f0f4f8;border:1px solid var(--border);border-radius:8px;padding:11px 13px;text-align:center}
+#page2 .scard .v{font-size:18px;font-weight:700;color:var(--primary);font-family:'Prompt',sans-serif}
+#page2 .scard .l{font-size:11px;color:var(--muted);margin-top:2px}
+#page2 .scard.ok .v{color:#2d7d46}
+#page2 .scard.wa .v{color:#7a5c0a}
+#page2 .scard.er .v{color:#8b2020}
+#page2 .bgroup{margin-bottom:8px}
+#page2 .blabel{font-size:11px;color:var(--text-muted);margin-bottom:3px;display:flex;justify-content:space-between;align-items:center}
+#page2 .blabel .num{font-weight:600;color:var(--text)}
+#page2 .btrack{display:flex;height:30px;border-radius:6px;overflow:hidden;border:1px solid var(--border);background:#f0f4f8}
+#page2 .bseg{height:100%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:rgba(255,255,255,.95);overflow:hidden;white-space:nowrap;position:relative;cursor:default;border-right:1px solid rgba(255,255,255,.25);transition:filter .15s}
+#page2 .bseg:hover{filter:brightness(1.1)}
+#page2 .bseg:last-child{border-right:none}
+#page2 .btrim,#page3 .btrim{height:100%;background:repeating-linear-gradient(45deg,#94a3b8 0,#94a3b8 4px,#cbd5e1 4px,#cbd5e1 8px);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;font-weight:700;text-shadow:0 1px 2px rgba(0,0,0,0.5);min-width:6px}
+#page2 .bwaste{height:100%;background:#f0f4f8;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--text-muted);border-left:2px dashed var(--border)}
+#page2 .tt{position:absolute;bottom:110%;left:50%;transform:translateX(-50%);background:rgba(20,30,48,.92);color:#fff;font-size:11px;padding:4px 8px;border-radius:4px;white-space:nowrap;pointer-events:none;z-index:99;display:none;font-weight:500}
+#page2 .bseg:hover .tt{display:block}
+#page2 .psec{margin-bottom:20px;border:1px solid var(--border);border-radius:8px;overflow:hidden}
+#page2 .psec-head{background:var(--primary-l);color:#fff;padding:9px 14px;font-weight:600;font-size:13px;display:flex;justify-content:space-between;align-items:center}
+#page2 .psec-body{padding:14px;background:#fff}
+#page2 .badge{display:inline-block;padding:2px 9px;border-radius:12px;font-size:11px;font-weight:600}
+#page2 .bg-ok{background:#eaf3ee;color:#2d7d46;font-weight:700}
+#page2 .bg-wa{background:#fdf3dc;color:#7a5c0a;font-weight:700}
+#page2 .bg-er{background:#fdeaea;color:#8b2020;font-weight:700}
+#page2 .row{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+#page2 .hidden{display:none!important}
+#page2 .sep{height:1px;background:var(--border);margin:14px 0}
+#page2 .summary-txt{font-size:12px;color:var(--text-muted)}
+#page2 .warn-box{background:var(--err-bg);border:1px solid rgba(255,77,109,0.3);border-radius:6px;padding:8px 12px;font-size:12px;color:var(--err);margin-bottom:10px}
+#page2 .export-row{display:flex;gap:10px;flex-wrap:wrap;padding-top:4px}
+#page2 .opt-card{background:#fff;border:2px solid var(--ok);border-radius:var(--r);margin-bottom:14px;overflow:hidden}
+#page2 .opt-head{background:var(--ok);color:#fff;padding:10px 16px;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+#page2 .opt-body{padding:14px;background:#fff}
+#page2 .opt-loading{display:flex;align-items:center;gap:12px;padding:20px;color:var(--muted)}
+#page2 .spinner2{width:22px;height:22px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+#page2 .shop-list{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+#page2 .shop-item{background:#e8f4ec;border:1px solid #a8d5b5;border-radius:8px;padding:8px 14px;text-align:center;min-width:110px}
+#page2 .shop-item .sv{font-size:18px;font-weight:700;color:var(--ok)}
+#page2 .shop-item .sl{font-size:11px;color:var(--text-muted);margin-top:2px}
+#page2 .eff-compare{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+#page2 .ec-item{flex:1;min-width:120px;border-radius:8px;padding:10px 14px;text-align:center}
+#page2 .ec-before{background:#fdf3dc;border:1px solid #e8d5a0}
+#page2 .ec-after{background:#eaf3ee;border:1px solid #a8d5b5}
+#page2 .ec-v{font-size:20px;font-weight:700;font-family:'Prompt',sans-serif}
+#page2 .ec-l{font-size:11px;color:var(--text-muted);margin-top:2px}
+#page2 .modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px}
+#page2 .modal-ov.hidden{display:none!important}
+#page2 .modal{background:#fff;border:1px solid var(--border);border-radius:14px;box-shadow:0 12px 50px rgba(0,0,0,.2);padding:24px;max-width:560px;width:100%;max-height:85vh;display:flex;flex-direction:column}
+#page2 .modal-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+#page2 .modal-title{font-size:16px;font-weight:700;color:var(--primary)}
+#page2 .modal-body{overflow-y:auto;flex:1}
+#page2 .modal-ft{margin-top:16px;display:flex;gap:8px;justify-content:flex-end;border-top:1px solid var(--border);padding-top:14px}
+#page2 .proj-item{display:flex;align-items:center;gap:10px;padding:11px 13px;border:1px solid var(--border);border-radius:9px;margin-bottom:7px;transition:background .12s,border-color .12s}
+#page2 .proj-item:hover{background:#f4f7fb;border-color:var(--primary-l)}
+#page2 .proj-item.active{background:#e8f0fb;border-color:var(--primary)}
+#page2 .pi-info{flex:1;min-width:0;cursor:pointer}
+#page2 .pi-name{font-weight:600;font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#page2 .pi-sub{font-size:11px;color:var(--text-muted);margin-top:2px}
+#page2 .pi-acts{display:flex;gap:5px;flex-shrink:0}
+#page2 .no-proj{text-align:center;padding:36px 20px;color:var(--text-muted);font-size:13px}
+#page2 .no-proj .big{font-size:36px;margin-bottom:10px}
+#page2 .ll-wrap{display:inline-flex;align-items:center;gap:10px;background:#fff;border:2px solid var(--primary-l);border-radius:10px;padding:8px 16px;font-size:13px;font-weight:500;color:var(--text);margin-top:10px}
+#page2 .ll-label{white-space:nowrap;color:var(--muted);font-size:12px}
+#page2 .ll-btns{display:flex;gap:4px}
+#page2 .ll-btn{border:2px solid var(--primary-l);background:#fff;color:var(--primary);border-radius:6px;width:36px;height:30px;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center}
+#page2 .ll-btn:hover{background:#e8f0fb}
+#page2 .ll-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+#page2 .proj-bar{background:#fff;border-bottom:2px solid var(--border);padding:9px 24px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:sticky;top:48px;z-index:50}
+#page2 .proj-name{font-weight:700;font-size:14px;color:var(--primary);line-height:1.2}
+#page2 .proj-sub{font-size:11px;color:var(--text-muted);margin-top:1px;transition:color .3s}
+#page2 .proj-sub.saved{color:var(--ok)}
+#page2 .proj-spacer{flex:1}
+#page2 .proj-btns{display:flex;gap:6px;align-items:center}
+
+
+
+/* ════════════════════════════
+   PAGE 3 — AUTO OPTIMIZER UI FIX
+   UI only: style Auto Optimizer like Standard Optimizer without mixing calculation outputs
+════════════════════════════ */
+#page3 .card{background:#fff;border:1px solid var(--border);border-radius:var(--r);margin-bottom:14px;overflow:hidden;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+#page3 .card-head{background:#2d7d46;color:#fff;padding:10px 16px;font-weight:600;font-size:13px;display:flex;align-items:center;justify-content:space-between;gap:8px;border-bottom:none}
+#page3 .card-body{padding:14px;background:#fff}
+#page3 input,#page3 select{border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:13px;background:#fff;color:var(--text);height:34px;font-family:'Prompt',sans-serif;width:100%}
+#page3 input:focus,#page3 select:focus{outline:2px solid rgba(45,125,70,.35);border-color:#2d7d46}
+#page3 .ptable{width:100%;border-collapse:collapse;font-size:13px}
+#page3 .ptable th{background:#f0f4f8;color:var(--muted);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;padding:8px 10px;border-bottom:1px solid var(--border);text-align:left}
+#page3 .ptable td{padding:6px 8px;border-bottom:1px solid var(--border)}
+#page3 .ptable tr:last-child td{border-bottom:none}
+#page3 .ptable td input,#page3 .ptable td select{border:1px solid transparent;background:transparent;height:30px}
+#page3 .ptable td input:hover,#page3 .ptable td select:hover{border-color:var(--border);background:#fff}
+#page3 .pctable{width:100%;border-collapse:collapse;font-size:13px;min-width:600px}
+#page3 .pctable th{background:#f0f4f8;color:var(--muted);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;padding:8px 10px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
+#page3 .pctable td{padding:5px 6px;border-bottom:1px solid var(--border);vertical-align:middle}
+#page3 .pctable tr:last-child td{border-bottom:none}
+#page3 .pctable td input,#page3 .pctable td select{border:1px solid transparent;background:transparent;height:30px}
+#page3 .pctable td input:hover,#page3 .pctable td select:hover{border-color:var(--border);background:#fff}
+#page3 .pctable td:last-child{width:36px;text-align:center}
+#page3 .tbl-wrap{overflow-x:auto;border-radius:8px}
+#page3 .btn{border:none;border-radius:6px;padding:7px 13px;font-size:13px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:opacity .15s,transform .1s;font-family:'Prompt',sans-serif;height:34px;white-space:nowrap;text-decoration:none}
+#page3 .btn:active{transform:scale(.97)}
+#page3 .btn-p{background:#2d7d46;color:#fff}.btn-p:hover{opacity:.85}
+#page3 .btn-s{background:#e8eef5;color:#1F4E79}.btn-s:hover{background:var(--border)}
+#page3 .btn-a{background:var(--accent3);color:#fff}.btn-a:hover{opacity:.85}
+#page3 .btn-d{background:var(--err-bg);color:var(--err)}.btn-d:hover{background:rgba(255,77,109,0.2)}
+#page3 .btn-g{background:var(--ok-bg);color:var(--ok)}.btn-g:hover{background:rgba(0,212,170,0.2)}
+#page3 .btn-sm{height:28px;padding:3px 9px;font-size:12px;border-radius:5px}
+#page3 .btn-big{padding:11px 28px;font-size:15px;height:auto;border-radius:8px}
+#page3 .row{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+#page3 .hidden{display:none!important}
+#page3 .sep{height:1px;background:var(--border);margin:14px 0}
+#page3 .summary-txt{font-size:12px;color:var(--text-muted)}
+#page3 .export-row{display:flex;gap:10px;flex-wrap:wrap;padding-top:4px}
+#page3 .stats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+#page3 .scard{flex:1;min-width:90px;background:#f0f4f8;border:1px solid var(--border);border-radius:8px;padding:11px 13px;text-align:center}
+#page3 .scard .v{font-size:18px;font-weight:700;color:#2d7d46;font-family:'Prompt',sans-serif}
+#page3 .scard .l{font-size:11px;color:var(--muted);margin-top:2px}
+#page3 .scard.ok .v{color:#2d7d46}
+#page3 .scard.wa .v{color:#7a5c0a}
+#page3 .scard.er .v{color:#8b2020}
+#page3 .bgroup{margin-bottom:8px}
+#page3 .blabel{font-size:11px;color:var(--text-muted);margin-bottom:3px;display:flex;justify-content:space-between;align-items:center}
+#page3 .blabel .num{font-weight:600;color:var(--text)}
+#page3 .btrack{display:flex;height:30px;border-radius:6px;overflow:hidden;border:1px solid var(--border);background:#f0f4f8}
+#page3 .bseg{height:100%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:rgba(255,255,255,.95);overflow:hidden;white-space:nowrap;position:relative;cursor:default;border-right:1px solid rgba(255,255,255,.25);transition:filter .15s}
+#page3 .bseg:hover{filter:brightness(1.1)}
+#page3 .bseg:last-child{border-right:none}
+#page3 .bwaste{height:100%;background:#f0f4f8;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--text-muted);border-left:2px dashed var(--border)}
+#page3 .tt{position:absolute;bottom:110%;left:50%;transform:translateX(-50%);background:rgba(20,30,48,.92);color:#fff;font-size:11px;padding:4px 8px;border-radius:4px;white-space:nowrap;pointer-events:none;z-index:99;display:none;font-weight:500}
+#page3 .bseg:hover .tt{display:block}
+#page3 .psec{margin-bottom:20px;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:#fff}
+#page3 .psec-head{background:#2d7d46;color:#fff;padding:9px 14px;font-weight:600;font-size:13px;display:flex;justify-content:space-between;align-items:center}
+#page3 .psec-body{padding:14px;background:#fff}
+#page3 .badge{display:inline-block;padding:2px 9px;border-radius:12px;font-size:11px;font-weight:600}
+#page3 .bg-ok{background:#eaf3ee;color:#2d7d46;font-weight:700}
+#page3 .bg-wa{background:#fdf3dc;color:#7a5c0a;font-weight:700}
+#page3 .bg-er{background:#fdeaea;color:#8b2020;font-weight:700}
+#page3 .warn-box{background:var(--err-bg);border:1px solid rgba(255,77,109,0.3);border-radius:6px;padding:8px 12px;font-size:12px;color:var(--err);margin-bottom:10px}
+#page3 .opt-card{background:#fff;border:2px solid #2d7d46;border-radius:var(--r);margin-bottom:14px;overflow:hidden}
+#page3 .opt-head{background:#2d7d46;color:#fff;padding:10px 16px;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+#page3 .opt-body{padding:14px;background:#fff}
+#page3 .opt-loading{display:flex;align-items:center;gap:12px;padding:20px;color:var(--muted)}
+#page3 .spinner2{width:22px;height:22px;border:3px solid var(--border);border-top-color:#2d7d46;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+#page3 .shop-list{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+#page3 .shop-item{background:#e8f4ec;border:1px solid #a8d5b5;border-radius:8px;padding:8px 14px;text-align:center;min-width:110px}
+#page3 .shop-item .sv{font-size:18px;font-weight:700;color:var(--ok)}
+#page3 .shop-item .sl{font-size:11px;color:var(--text-muted);margin-top:2px}
+#page3 .eff-compare{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+#page3 .ec-item{flex:1;min-width:120px;border-radius:8px;padding:10px 14px;text-align:center}
+#page3 .ec-before{background:#fdf3dc;border:1px solid #e8d5a0}
+#page3 .ec-after{background:#eaf3ee;border:1px solid #a8d5b5}
+#page3 .ec-v{font-size:20px;font-weight:700;font-family:'Prompt',sans-serif}
+#page3 .ec-l{font-size:11px;color:var(--text-muted);margin-top:2px}
+#page3 .ll-wrap{display:inline-flex;align-items:center;gap:10px;background:#fff;border:2px solid #2d7d46;border-radius:10px;padding:8px 16px;font-size:13px;font-weight:500;color:var(--text);margin-top:10px}
+#page3 .ll-label{white-space:nowrap;color:var(--muted);font-size:12px}
+#page3 .ll-btns{display:flex;gap:4px}
+#page3 .ll-btn{border:2px solid #2d7d46;background:#fff;color:#2d7d46;border-radius:6px;width:36px;height:30px;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center}
+#page3 .ll-btn:hover{background:#e8f4ec}
+#page3 .ll-btn.active{background:#2d7d46;color:#fff;border-color:#2d7d46}
+#page3 .import-badge{display:inline-flex;align-items:center;gap:6px;background:#e8f4ec;border:1px solid #a8d5b5;border-radius:4px;padding:3px 10px;font-size:11px;color:#2d7d46;font-family:'Prompt',sans-serif}
+#page3 .auto-toolbar{display:flex;flex-direction:column;align-items:center;gap:12px;margin:14px 0}
+#page3 .auto-toolbar-row{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+#page3 .auto-note{font-size:11px;color:var(--text-muted);margin-bottom:8px;line-height:1.55}
+@media(max-width:720px){#page3 .card-head{align-items:flex-start;flex-direction:column}#page3 .auto-toolbar-row{flex-direction:column;align-items:center}#page3 .ll-wrap{width:100%;justify-content:space-between}}
+
+/* import badge */
+.import-badge{display:inline-flex;align-items:center;gap:6px;background:#e8f0fb;border:1px solid #b8d0ee;border-radius:4px;padding:3px 10px;font-size:11px;color:var(--primary);font-family:'Prompt',sans-serif}
+
+@media(max-width:600px){
+  .stats-bar{flex-wrap:wrap}
+  .stat-card{min-width:calc(50% - 5px)}
+  .app-logo{display:none}
+}
+
+@media print {
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
+  .app-nav, .proj-bar, .btn, button, input, select, .modal-ov { display: none !important; }
+  .page { display: block !important; }
+  #page1 { display: none !important; }
+  #page2 { display: block !important; }
+  .card, .psec, .opt-card { break-inside: avoid; }
+  .bseg { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  body { background: white !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="app-nav">
+  <span class="app-logo">⬡ APA</span>
+  <button class="tab-btn active" id="tab1" onclick="switchTab(1)">
+    📊 Profile Processor
+    <span class="tab-badge dim" id="badge1">0</span>
+  </button>
+  <button class="tab-btn" id="tab2" onclick="switchTab(2)">
+    📐 Standard Optimizer
+    <span class="tab-badge dim" id="badge2">0</span>
+  </button>
+  <button class="tab-btn" id="tab3" onclick="switchTab(3)">
+    🎯 Auto Optimizer
+    <span class="tab-badge dim" id="badge3">0</span>
+  </button>
+</nav>
+
+<!-- ════ PAGE 1: PROCESSOR ════ -->
+<div class="page active" id="page1">
+<div class="p1-wrap">
+  <div class="p1-header">
+    <div class="badge-pill">profile processor</div>
+    <h1>Profile <span>Extractor</span></h1>
+    <p>โยนไฟล์ Excel เข้ามา — ได้รายการ Profile + ขนาด + จำนวน แล้วส่งต่อไป Advance Optimizer ได้เลย</p>
+  </div>
+
+  <div class="drop-zone" id="dropZone">
+    <span class="drop-icon">📊</span>
+    <div class="drop-title">วาง Excel ไฟล์ที่นี่</div>
+    <div class="drop-sub">หรือ <span onclick="document.getElementById('fileInput').click()">เลือกไฟล์</span> (.xlsx)</div>
+    <input type="file" id="fileInput" accept=".xlsx,.xls">
+  </div>
+
+  <div class="file-info" id="fileInfo">
+    <span style="font-size:22px">📄</span>
+    <div style="flex:1">
+      <div class="file-name" id="fileName">—</div>
+      <div class="file-size" id="fileSize">—</div>
+    </div>
+    <button class="btn-remove" onclick="clearFile()">✕</button>
+  </div>
+
+  <div class="error-msg" id="errorMsg"></div>
+
+  <div style="display:flex;gap:10px;margin-bottom:28px">
+  <button class="btn-process" id="btnProcess" onclick="processFile()" disabled style="margin-bottom:0;flex:1">
+    ⚡ ประมวลผลไฟล์
+  </button>
+  <button onclick="resetAll()" style="padding:13px 20px;background:#fff;color:var(--danger);border:2px solid var(--danger);border-radius:8px;font-size:14px;font-weight:700;font-family:'Prompt',sans-serif;cursor:pointer;transition:all 0.2s;white-space:nowrap" onmouseover="this.style.background='#fdeaea'" onmouseout="this.style.background='#fff'">
+    🗑 ล้างทั้งหมด
+  </button>
+</div>
+
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <span>กำลังประมวลผล...</span>
+  </div>
+
+  <div class="transfer-banner" id="transferBanner">
+    <div class="transfer-info">
+      ✅ ประมวลผลสำเร็จ — <strong id="transferCount">0</strong> รายการพร้อมส่งไป Optimizer
+    </div>
+    <button class="btn-transfer" onclick="sendToAdvance()">
+      ✂ ส่งไป Optimizer →
+    </button>
+  </div>
+
+  <div class="stats-bar" id="statsBar">
+    <div class="stat-card">
+      <div class="stat-num" id="statSheets">0</div>
+      <div class="stat-label">Sheets</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="statCodes">0</div>
+      <div class="stat-label">รหัสชิ้นงาน</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="statRows">0</div>
+      <div class="stat-label">รายการทั้งหมด</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="statTotal">0</div>
+      <div class="stat-label">จำนวนรวม (ชิ้น)</div>
+    </div>
+  </div>
+
+  <div class="p1-results" id="p1Results">
+    <div class="p1-results-hdr">
+      <span class="p1-results-title">// RESULT TABLE</span>
+      <div class="btn-row">
+        <button class="btn-dl btn-dl-excel" onclick="downloadExcel()">⬇ ดาวน์โหลด Excel</button>
+      </div>
+    </div>
+    <div class="search-bar">
+      <input type="text" class="search-input" id="searchInput" placeholder="ค้นหา รหัส / Profile / Sheet..." oninput="filterTable()">
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th onclick="sortBy('sheet')">Sheet</th>
+            <th onclick="sortBy('code')">ชื่อรหัส</th>
+            <th onclick="sortBy('profile')">Profile</th>
+            <th onclick="sortBy('size')" style="text-align:right">ขนาด (mm)</th>
+            <th onclick="sortBy('qty')" style="text-align:right">จำนวน (ชิ้น)</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+    <div class="pagination">
+      <span id="pageInfo">—</span>
+      <div class="page-btns" id="pageBtns"></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ════ PAGE 2: ADVANCE OPTIMIZER ════ -->
+<div class="page" id="page2">
+
+<div class="hdr2">
+  <div class="hdr2-icon">✂</div>
+  <div>
+    <h2>Standard Optimizer</h2>
+    <p>คำนวณแผนตัดด้วยความยาวเส้นจาก Profile ที่กำหนดไว้</p>
+  </div>
+</div>
+
+<div class="proj-bar">
+  <span style="font-size:18px">📁</span>
+  <div>
+    <div class="proj-name" id="projBarName">โปรเจกต์ใหม่</div>
+    <div class="proj-sub" id="projBarSub">ยังไม่ได้บันทึก</div>
+  </div>
+  <div class="proj-spacer"></div>
+  <div class="proj-btns">
+    <button class="btn btn-s btn-sm" onclick="newProject()">➕ ใหม่</button>
+    <button class="btn btn-s btn-sm" onclick="openProjModal()">📂 เปิด</button>
+    <button class="btn btn-p btn-sm" onclick="saveProject()">💾 บันทึก</button>
+    <button class="btn btn-s btn-sm" onclick="exportProject()" title="Export project เป็นไฟล์ .json">⬇ Export</button>
+    <button class="btn btn-s btn-sm" onclick="document.getElementById('importProjFile').click()" title="Import project จากไฟล์ .json">⬆ Import</button>
+    <input type="file" id="importProjFile" accept=".json" style="display:none" onchange="importProject(event)">
+  </div>
+</div>
+
+<div class="modal-ov hidden" id="projModal" onclick="if(event.target===this)closeProjModal()">
+  <div class="modal">
+    <div class="modal-hd"><span class="modal-title">📂 โปรเจกต์ที่บันทึกไว้</span><button class="btn btn-s btn-sm" onclick="closeProjModal()">✕</button></div>
+    <div class="modal-body" id="projListBody"></div>
+    <div class="modal-ft"><button class="btn btn-s" onclick="closeProjModal()">ปิด</button></div>
+  </div>
+</div>
+<div class="modal-ov hidden" id="saveModal" onclick="if(event.target===this)closeSaveModal()">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-hd"><span class="modal-title">💾 บันทึกโปรเจกต์</span><button class="btn btn-s btn-sm" onclick="closeSaveModal()">✕</button></div>
+    <div style="font-size:13px;color:var(--text-muted);margin-bottom:12px">ตั้งชื่อโปรเจกต์</div>
+    <input type="text" id="saveNameInput" placeholder="เช่น บ้านเลขที่ 22" maxlength="80" onkeydown="if(event.key==='Enter')confirmSave()">
+    <div class="modal-ft">
+      <button class="btn btn-s" onclick="closeSaveModal()">ยกเลิก</button>
+      <button class="btn btn-p" onclick="confirmSave()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<div class="p2-wrap">
+
+<div class="card">
+  <div class="card-head">
+    <span>⚙ โปรไฟล์อลูมิเนียม</span>
+  </div>
+  <div class="card-body" style="padding:12px">
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">⚠ <b style="color:var(--err)">ตัดทิ้งหัว-ท้าย 75 mm × 2 = 150 mm/เส้น</b> (ความยาวใช้งานจริง = ความยาวเส้น - 150 mm)<br>💡 ความยาวเส้นด้านล่างใช้เป็น <b>ค่าเริ่มต้น</b> — ระบบจะ Auto-Optimize หาขนาดที่ดีที่สุด (4500–6400 mm)</div>
+    <div class="tbl-wrap">
+      <table class="ptable">
+        <thead><tr><th style="width:200px">ชื่อโปรไฟล์</th><th style="width:180px">ความยาวเส้น (mm)</th><th style="width:120px">จำนวนเส้น (Stock)</th><th style="width:80px">Kerf (mm)</th><th style="width:40px"></th></tr></thead>
+        <tbody id="profileBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div style="text-align:center;margin-bottom:14px">
+  <div style="margin-bottom:10px">
+    <button class="btn btn-s" onclick="addProfile()" style="padding:8px 20px;border:2px dashed var(--border);background:#f8fafc;color:var(--primary)">+ เพิ่มโปรไฟล์</button>
+  </div>
+  <button class="btn btn-p btn-big" onclick="calculateStandard()">📐 คำนวณ Standard</button>
+  <div style="display:flex;justify-content:center;gap:10px;margin-top:10px;flex-wrap:wrap">
+    <div class="ll-wrap">
+      <span class="ll-label">🔒 ขนาดที่ต่างกันได้/เส้น:</span>
+      <div class="ll-btns" id="llBtns">
+        <button class="ll-btn" data-val="1" onclick="setLabelLimit(1)">1</button>
+        <button class="ll-btn" data-val="2" onclick="setLabelLimit(2)">2</button>
+        <button class="ll-btn active" data-val="3" onclick="setLabelLimit(3)">3</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-head">
+    <span>📋 รายการชิ้นงาน</span>
+    <div class="row" style="gap:6px">
+      <button class="btn btn-s btn-sm" onclick="addRow()">+ เพิ่มรายการ</button>
+      <button class="btn btn-a btn-sm" onclick="document.getElementById('importFile').click()">📥 Import Excel</button>
+      <button class="btn btn-g btn-sm" onclick="document.getElementById('importProfileFile').click()">📥 Import from Profile Processor</button>
+      <button class="btn btn-s btn-sm" onclick="loadSample()">📂 ตัวอย่าง</button>
+      <button class="btn btn-d btn-sm" onclick="clearAll()">🗑 ล้าง</button>
+    </div>
+  </div>
+  <input type="file" id="importFile" accept=".xlsx,.xls" style="display:none" onchange="importExcel(event)">
+  <input type="file" id="importProfileFile" accept=".xlsx,.xls" style="display:none" onchange="importProfileProcessor(event)">
+  <div class="card-body" style="padding:12px">
+    <div id="importedBadge" style="display:none;margin-bottom:8px">
+      <span class="import-badge">📥 นำเข้าจาก Profile Processor: <span id="importedCount">0</span> รายการ</span>
+    </div>
+    <div class="tbl-wrap">
+      <table class="pctable">
+        <thead><tr>
+          <th style="width:240px">โปรไฟล์</th>
+          <th style="min-width:240px">ชื่อ/รหัสชิ้น</th>
+          <th style="width:110px">ขนาด (mm)</th>
+          <th style="width:80px">จำนวน</th>
+          <th style="width:120px">รวม (mm)</th>
+          <th style="width:36px"></th>
+        </tr></thead>
+        <tbody id="pieceBody"></tbody>
+      </table>
+    </div>
+    <div class="sep"></div>
+    <div id="pieceSummary" class="summary-txt">ยังไม่มีรายการ</div>
+  </div>
+</div>
+
+<div id="results" class="hidden">
+  <div class="card">
+    <div class="card-head">
+      <span>📊 ผลลัพธ์ (ใช้ขนาดเส้นจาก Profile)</span>
+      <div class="export-row">
+        <button class="btn btn-g btn-sm" onclick="exportExcel()">📊 Export Excel</button>
+        <button class="btn btn-s btn-sm" onclick="window.print()">🖨 พิมพ์</button>
+      </div>
+    </div>
+    <div class="card-body" id="resultsBody"></div>
+  </div>
+</div>
+
+
+
+</div><!-- /p2-wrap -->
+</div><!-- /page2 -->
+
+
+
+<!-- ════ PAGE 3: AUTO OPTIMIZER ════ -->
+<div class="page" id="page3">
+
+<div class="hdr2" style="background:#2d7d46">
+  <div class="hdr2-icon" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3)">🎯</div>
+  <div>
+    <h2 style="color:#fff">Auto Optimizer</h2>
+    <p style="color:rgba(255,255,255,0.85)">ระบบหาขนาดเส้นที่ดีที่สุดอัตโนมัติ (4500–6400 mm) — เป้าหมาย Loss &lt; 1.5%</p>
+  </div>
+</div>
+
+<div class="p2-wrap">
+
+<!-- Profile section (mirrored from page2) -->
+<div class="card">
+  <div class="card-head">
+    <span>⚙ โปรไฟล์อลูมิเนียม</span>
+  </div>
+  <div class="card-body" style="padding:12px">
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">⚠ <b style="color:var(--err)">ตัดทิ้งหัว-ท้าย 75 mm × 2 = 150 mm/เส้น</b><br>💡 ข้อมูลรับจาก Profile Extractor ได้เหมือน Standard Optimizer แต่ผลคำนวณของ Auto Optimizer แยกออกจาก Standard</div>
+    <div class="tbl-wrap">
+      <table class="ptable">
+        <thead><tr><th style="width:200px">ชื่อโปรไฟล์</th><th style="width:180px">ความยาวเส้น (MM)</th><th style="width:120px">จำนวนเส้น (Stock)</th><th style="width:80px">KERF (MM)</th><th style="width:40px"></th></tr></thead>
+        <tbody id="profileBody_3"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Add profile + calculate + labels + maxSizes -->
+<div class="auto-toolbar">
+  <button class="btn btn-s" onclick="addProfile()" style="padding:8px 24px;border:2px dashed var(--border);background:#f8fafc;color:var(--primary);width:fit-content">+ เพิ่มโปรไฟล์</button>
+  <div class="auto-toolbar-row">
+    <div class="ll-wrap">
+      <span class="ll-label">🔒 ขนาดที่ต่างกันได้/เส้น:</span>
+      <div class="ll-btns" id="llBtns_3">
+        <button class="ll-btn" data-val="1" onclick="setLabelLimit(1)">1</button>
+        <button class="ll-btn" data-val="2" onclick="setLabelLimit(2)">2</button>
+        <button class="ll-btn active" data-val="3" onclick="setLabelLimit(3)">3</button>
+      </div>
+    </div>
+    <div class="ll-wrap">
+      <span class="ll-label">📏 ขนาดเส้นสูงสุด:</span>
+      <div class="ll-btns" id="msBtns">
+        <button class="ll-btn" data-val="2" onclick="setMaxSizes(2)">2</button>
+        <button class="ll-btn" data-val="3" onclick="setMaxSizes(3)">3</button>
+        <button class="ll-btn active" data-val="4" onclick="setMaxSizes(4)">4</button>
+        <button class="ll-btn" data-val="5" onclick="setMaxSizes(5)">5</button>
+        <button class="ll-btn" data-val="6" onclick="setMaxSizes(6)">6</button>
+      </div>
+    </div>
+  </div>
+  <button class="btn btn-p btn-big" onclick="calculateAuto()" style="background:#2d7d46;border:none">🎯 คำนวณ + Auto-Optimize</button>
+</div>
+
+<!-- Piece list (mirrored from page2) -->
+<div class="card">
+  <div class="card-head">
+    <span>📋 รายการชิ้นงาน</span>
+    <div class="row" style="gap:6px">
+      <button class="btn btn-s btn-sm" onclick="addRow()">+ เพิ่มรายการ</button>
+      <button class="btn btn-a btn-sm" onclick="document.getElementById('importFile').click()">📥 Import Excel</button>
+      <button class="btn btn-g btn-sm" onclick="document.getElementById('importProfileFile').click()">📥 Import from Profile Processor</button>
+      <button class="btn btn-s btn-sm" onclick="loadSample()">📂 ตัวอย่าง</button>
+      <button class="btn btn-d btn-sm" onclick="clearAll()">🗑 ล้าง</button>
+    </div>
+  </div>
+  <div class="card-body" style="padding:12px">
+    <div id="importedBadge_3" style="display:none;margin-bottom:8px">
+      <span class="import-badge">📥 นำเข้าจาก Profile Processor: <span id="importedCount_3">0</span> รายการ</span>
+    </div>
+    <div class="tbl-wrap">
+      <table class="pctable">
+        <thead><tr>
+          <th style="width:240px">โปรไฟล์</th>
+          <th style="min-width:240px">ชื่อ/รหัสชิ้น</th>
+          <th style="width:110px">ขนาด (MM)</th>
+          <th style="width:80px">จำนวน</th>
+          <th style="width:120px">รวม (MM)</th>
+          <th style="width:36px"></th>
+        </tr></thead>
+        <tbody id="pieceBody_3"></tbody>
+      </table>
+    </div>
+    <div class="sep"></div>
+    <div id="pieceSummary_3" class="summary-txt">ยังไม่มีรายการ</div>
+  </div>
+</div>
+
+<!-- Standard result (before optimize) -->
+<div id="results_3" class="hidden">
+  <div class="card">
+    <div class="card-head">
+      <span>📊 Baseline ก่อน Auto-Optimize</span>
+      <div class="export-row">
+        <button class="btn btn-g btn-sm" onclick="exportExcel()">📊 Export Excel</button>
+        <button class="btn btn-s btn-sm" onclick="window.print()">🖨 พิมพ์</button>
+      </div>
+    </div>
+    <div class="card-body" id="resultsBody_3"></div>
+  </div>
+</div>
+
+<!-- Optimize section -->
+<div id="optSection" class="hidden">
+  <div class="opt-card">
+    <div class="opt-head" style="background:#2d7d46">
+      <span id="optHeadTitle">🎯 Auto-Optimize — หาขนาดเส้นที่ดีที่สุด</span>
+      <div class="export-row">
+        <button class="btn btn-sm" style="background:rgba(255,255,255,.2);color:#fff;font-weight:700" onclick="exportOptExcel()">📊 Export Optimized</button>
+        <button class="btn btn-sm" style="background:rgba(255,255,255,.2);color:#fff" onclick="window.print()">🖨 พิมพ์</button>
+      </div>
+    </div>
+    <div class="opt-body" style="background:#fff">
+      <div id="optLoading" class="opt-loading" style="flex-direction:column;align-items:stretch;gap:10px;padding:18px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="spinner2"></div>
+          <span id="optLoadingMsg" style="flex:1;font-size:13px">กำลังค้นหาขนาดเส้นที่ดีที่สุด...</span>
+          <span id="optProgressPct" style="font-weight:700;color:#2d7d46;min-width:40px;text-align:right">0%</span>
+        </div>
+        <div style="background:#e2e8f0;border-radius:4px;height:8px;overflow:hidden">
+          <div id="optProgressBar" style="width:0%;height:100%;background:#2d7d46;border-radius:4px;transition:width 0.3s"></div>
+        </div>
+        <div id="optProgressDetail" style="font-size:11px;color:var(--muted)"></div>
+      </div>
+      <div id="optBody" class="hidden"></div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /p2-wrap -->
+</div><!-- /page3 -->
+
+<script>
+// ════════════════════════════════════════
+// SHARED STATE
+// ════════════════════════════════════════
+var allData = [];
+var filteredData = [];
+var currentPage = 1;
+var PAGE_SIZE = 50;
+var sortKey = null;
+var sortDir = 1;
+var currentFile = null;
+
+// ════════════════════════════════════════
+// TAB NAVIGATION
+// ════════════════════════════════════════
+function switchTab(n) {
+  [1,2,3].forEach(function(i){
+    var pg=document.getElementById('page'+i);
+    var tb=document.getElementById('tab'+i);
+    if(pg)pg.classList.toggle('active', i===n);
+    if(tb)tb.classList.toggle('active', i===n);
+  });
+  if(n===3){updateAutoStatus();syncLabelBtnsFromMain();}
+}
+function updateAutoStatus(){
+  var el=document.getElementById('autoStatusInfo');
+  if(!el)return;
+  var valid=pieces.filter(function(p){return p.size>0&&p.qty>0;});
+  var profSet={};
+  valid.forEach(function(p){var pr=profiles.find(function(x){return x.id===p.profId;});if(pr)profSet[pr.name]=1;});
+  el.textContent = valid.length+' รายการ · '+Object.keys(profSet).length+' โปรไฟล์';
+}
+function syncLabelBtnsFromMain(){
+  var val=getLabelLimit();
+  document.querySelectorAll('#llBtns .ll-btn, #llBtns_3 .ll-btn').forEach(function(b){
+    b.classList.toggle('active',parseInt(b.getAttribute('data-val'),10)===val);
+  });
+}
+function syncAllSummaries(){
+  var valid=pieces.filter(function(p){return p.size>0&&p.qty>0;});
+  var total=valid.reduce(function(s,p){return s+p.size*p.qty;},0);
+  var cnt=valid.reduce(function(s,p){return s+p.qty;},0);
+  var text=valid.length?(valid.length+' รายการ | '+cnt+' ชิ้น | ความยาวรวม '+fmtN(total)+' mm'):'ยังไม่มีรายการ';
+  ['pieceSummary','pieceSummary_3'].forEach(function(id){var el=document.getElementById(id);if(el)el.textContent=text;});
+}
+function setLabelLimitBoth(val){
+  document.querySelectorAll('#llBtns .ll-btn, #llBtns_3 .ll-btn').forEach(function(b){
+    b.classList.toggle('active',parseInt(b.getAttribute('data-val'),10)===val);
+  });
+}
+
+// ════════════════════════════════════════
+// PAGE 1: PROCESSOR
+// ════════════════════════════════════════
+var dz = document.getElementById('dropZone');
+dz.addEventListener('dragover', function(e){e.preventDefault();dz.classList.add('dragover');});
+dz.addEventListener('dragleave', function(){dz.classList.remove('dragover');});
+dz.addEventListener('drop', function(e){e.preventDefault();dz.classList.remove('dragover');var f=e.dataTransfer.files[0];if(f)loadFile(f);});
+dz.addEventListener('click', function(e){if(e.target.tagName!=='SPAN'&&e.target.tagName!=='INPUT')document.getElementById('fileInput').click();});
+document.getElementById('fileInput').addEventListener('change', function(e){if(e.target.files[0])loadFile(e.target.files[0]);});
+
+function loadFile(file){
+  if(!file.name.match(/\.xlsx?$/i)){showError('กรุณาเลือกไฟล์ .xlsx เท่านั้น');return;}
+  currentFile=file;
+  document.getElementById('fileName').textContent=file.name;
+  document.getElementById('fileSize').textContent=(file.size/1024).toFixed(1)+' KB';
+  document.getElementById('fileInfo').classList.add('show');
+  document.getElementById('btnProcess').disabled=false;
+  hideError();
+  document.getElementById('statsBar').classList.remove('show');
+  document.getElementById('p1Results').classList.remove('show');
+  document.getElementById('transferBanner').classList.remove('show');
+}
+function resetAll(){
+  if(!confirm('ล้างทุกอย่างและเริ่มใหม่?\n(ไฟล์, ผลลัพธ์, รายการชิ้นงาน, โปรไฟล์ และข้อมูลทั้งหมดจะถูกล้าง)'))return;
+  // Reset Profile Processor
+  clearFile();
+  allData=[];filteredData=[];
+  document.getElementById('statsBar').classList.remove('show');
+  document.getElementById('p1Results').classList.remove('show');
+  document.getElementById('transferBanner').classList.remove('show');
+  document.getElementById('searchInput').value='';
+  document.getElementById('tableBody').innerHTML='';
+  document.getElementById('pageInfo').textContent='—';
+  document.getElementById('pageBtns').innerHTML='';
+  ['badge1','badge2','badge3'].forEach(function(id){var el=document.getElementById(id);if(el){el.textContent='0';el.classList.add('dim');}});
+  hideError();
+  // Reset Optimizer (Standard + Auto)
+  pieces=[];rid=0;
+  profiles=[];pid=0;
+  ['pieceBody','pieceBody_3','profileBody','profileBody_3'].forEach(function(id){var el=document.getElementById(id);if(el)el.innerHTML='';});
+  ['results','results_3','optSection'].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.add('hidden');});
+  ['importedBadge','importedBadge_3'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='none';});
+  lastResult=null;lastOptResult=null;
+  addProfileData('รายการตัด','6400',2);
+  updatePieceDropdowns();
+  syncAllSummaries();
+}
+function clearFile(){
+  currentFile=null;document.getElementById('fileInput').value='';
+  document.getElementById('fileInfo').classList.remove('show');
+  document.getElementById('btnProcess').disabled=true;
+  document.getElementById('statsBar').classList.remove('show');
+  document.getElementById('p1Results').classList.remove('show');
+  document.getElementById('transferBanner').classList.remove('show');
+  hideError();allData=[];
+}
+function showError(msg){var el=document.getElementById('errorMsg');el.textContent=msg;el.classList.add('show');}
+function hideError(){document.getElementById('errorMsg').classList.remove('show');}
+
+function processFile(){
+  if(!currentFile)return;
+  document.getElementById('loading').classList.add('show');
+  document.getElementById('btnProcess').disabled=true;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var data=new Uint8Array(e.target.result);
+      var wb=XLSX.read(data,{type:'array'});
+      allData=[];
+      wb.SheetNames.forEach(function(sheetName){
+        var ws=wb.Sheets[sheetName];
+        var raw=XLSX.utils.sheet_to_json(ws,{header:1,defval:null});
+        if(raw.length<4)return;
+        var profileRow=raw[1]||[];var codeRow=raw[2]||[];
+        var profiles2=[];
+        for(var col=2;col<profileRow.length;col+=3){
+          var pname=profileRow[col];var pcode=codeRow[col];
+          if(pname!=null&&pcode!=null)profiles2.push({col:col,name:String(pcode).trim()+' '+String(pname).trim().replace(/^\d+\.\s*/,''),code:''});
+        }
+        var currentCode=null,currentQty=null;
+        for(var ri=3;ri<raw.length;ri++){
+          var row=raw[ri]||[];var col0=row[0];var col1=row[1];
+          if(col0!=null&&String(col0).trim()!=''){currentCode=String(col0).trim();if(col1!=null&&!isNaN(parseFloat(col1)))currentQty=parseFloat(col1);}
+          if(!currentCode)continue;
+          profiles2.forEach(function(p){
+            var sizeVal=row[p.col];var tonVal=row[p.col+1];
+            if(sizeVal!=null&&tonVal!=null&&!isNaN(parseFloat(tonVal))){
+              var ton=parseFloat(tonVal);var total=currentQty?Math.round(ton*currentQty):Math.round(ton);
+              allData.push({sheet:sheetName,code:currentCode,profile:(p.code+' '+p.name.replace(/^\d+\.\s*/,'')).trim(),size:sizeVal,qty:total});
+            }
+          });
+        }
+      });
+      document.getElementById('loading').classList.remove('show');
+      document.getElementById('btnProcess').disabled=false;
+      if(!allData.length){showError('ไม่พบข้อมูลในไฟล์นี้');return;}
+      var sheets=[...new Set(allData.map(function(r){return r.sheet;}))];
+      var codes=[...new Set(allData.map(function(r){return r.code;}))];
+      var totalQty=allData.reduce(function(s,r){return s+r.qty;},0);
+      document.getElementById('statSheets').textContent=sheets.length;
+      document.getElementById('statCodes').textContent=codes.length;
+      document.getElementById('statRows').textContent=allData.length.toLocaleString();
+      document.getElementById('statTotal').textContent=totalQty.toLocaleString();
+      document.getElementById('statsBar').classList.add('show');
+      document.getElementById('badge1').textContent=allData.length;
+      document.getElementById('badge1').classList.remove('dim');
+      // transfer banner
+      document.getElementById('transferCount').textContent=allData.length.toLocaleString();
+      document.getElementById('transferBanner').classList.add('show');
+      filteredData=[...allData];currentPage=1;renderTable();
+      document.getElementById('p1Results').classList.add('show');
+    }catch(err){
+      document.getElementById('loading').classList.remove('show');
+      document.getElementById('btnProcess').disabled=false;
+      showError('เกิดข้อผิดพลาด: '+err.message);
+    }
+  };
+  reader.readAsArrayBuffer(currentFile);
+}
+
+function filterTable(){
+  var q=document.getElementById('searchInput').value.toLowerCase();
+  filteredData=q?allData.filter(function(r){return r.sheet.toLowerCase().includes(q)||r.code.toLowerCase().includes(q)||r.profile.toLowerCase().includes(q);}): [...allData];
+  currentPage=1;renderTable();
+}
+function sortBy(key){
+  if(sortKey===key)sortDir*=-1;else{sortKey=key;sortDir=1;}
+  filteredData.sort(function(a,b){var av=a[key],bv=b[key];if(typeof av==='string')av=av.toLowerCase();if(typeof bv==='string')bv=bv.toLowerCase();return av<bv?-sortDir:av>bv?sortDir:0;});
+  currentPage=1;renderTable();
+}
+function renderTable(){
+  var tbody=document.getElementById('tableBody');
+  var start=(currentPage-1)*PAGE_SIZE;var page=filteredData.slice(start,start+PAGE_SIZE);
+  if(!filteredData.length){tbody.innerHTML='<tr><td colspan="5" class="no-data">ไม่พบข้อมูล</td></tr>';}
+  else{tbody.innerHTML=page.map(function(r){return '<tr><td class="td-sheet">'+r.sheet+'</td><td class="td-code">'+r.code+'</td><td class="td-profile">'+r.profile+'</td><td class="td-size">'+r.size+'</td><td class="td-qty">'+r.qty.toLocaleString()+'</td></tr>';}).join('');}
+  var totalPages=Math.ceil(filteredData.length/PAGE_SIZE);
+  document.getElementById('pageInfo').textContent='แสดง '+Math.min(start+1,filteredData.length)+'–'+Math.min(start+PAGE_SIZE,filteredData.length)+' จาก '+filteredData.length.toLocaleString()+' รายการ';
+  var pbEl=document.getElementById('pageBtns');var btns='';
+  btns+='<button class="page-btn" onclick="goPage('+(currentPage-1)+')" '+(currentPage===1?'disabled':'')+'>‹</button>';
+  for(var p=Math.max(1,currentPage-2);p<=Math.min(totalPages,currentPage+2);p++)btns+='<button class="page-btn '+(p===currentPage?'active':'')+'" onclick="goPage('+p+')">'+p+'</button>';
+  btns+='<button class="page-btn" onclick="goPage('+(currentPage+1)+')" '+(currentPage===totalPages?'disabled':'')+'>›</button>';
+  pbEl.innerHTML=btns;
+}
+function goPage(p){var totalPages=Math.ceil(filteredData.length/PAGE_SIZE);if(p<1||p>totalPages)return;currentPage=p;renderTable();}
+
+function downloadExcel(){
+  if(!allData.length)return;
+  var wb2=XLSX.utils.book_new();
+  var ws1Data=[['Sheet','ชื่อรหัส','Profile','ขนาด (mm)','จำนวน (ชิ้น)']];
+  allData.forEach(function(r){ws1Data.push([r.sheet,r.code,r.profile,r.size,r.qty]);});
+  var ws1=XLSX.utils.aoa_to_sheet(ws1Data);
+  ws1['!cols']=[{wch:18},{wch:16},{wch:38},{wch:14},{wch:14}];
+  XLSX.utils.book_append_sheet(wb2,ws1,'สรุปรายการ');
+  var fname=(currentFile&&currentFile.name?currentFile.name.replace(/\.xlsx?$/i,''):'output')+'_สรุปรายการ.xlsx';
+  XLSX.writeFile(wb2,fname);
+}
+
+// ── Send to Advance Optimizer ──
+function sendToAdvance(){
+  if(!allData.length){alert('ไม่มีข้อมูล กรุณาประมวลผลไฟล์ก่อน');return;}
+  // Clear pieces (shared between Standard and Auto)
+  pieces=[];
+  ['pieceBody','pieceBody_3'].forEach(function(id){var el=document.getElementById(id);if(el)el.innerHTML='';});
+  rid=0;
+  // Hide result sections
+  var r=document.getElementById('results');if(r)r.classList.add('hidden');
+  var r3=document.getElementById('results_3');if(r3)r3.classList.add('hidden');
+  var o=document.getElementById('optSection');if(o)o.classList.add('hidden');
+  lastResult=null;lastOptResult=null;
+  // Import all rows
+  var added=0;
+  allData.forEach(function(row){
+    var profName=String(row.profile||'').replace(/^\d+\.\s*/,'').trim();
+    var prof=profiles.find(function(p){return p.name===profName;});
+    if(!prof&&profName){prof=addProfileData(profName,'6400',2);updatePieceDropdowns();}
+    if(!prof&&profiles.length)prof=profiles[0];
+    if(prof){addRow(prof.id,row.code,row.size,row.qty);added++;}
+  });
+  updateSummary();
+  // Update badges on both tabs
+  ['importedBadge','importedBadge_3'].forEach(function(id){var ib=document.getElementById(id);if(ib)ib.style.display='block';});
+  ['importedCount','importedCount_3'].forEach(function(id){var ic=document.getElementById(id);if(ic)ic.textContent=added;});
+  ['badge2','badge3'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el){el.textContent=added;el.classList.remove('dim');}
+  });
+  // Switch to Standard Optimizer
+  switchTab(2);
+}
+
+// ════════════════════════════════════════
+// PAGE 2: ADVANCE OPTIMIZER (full logic from advance1.1)
+// ════════════════════════════════════════
+
+var profiles=[], pieces=[], pid=0, rid=0, lastResult=null, lastOptResult=null, lastProfId=null;
+var END_TRIM = 75; // mm ตัดทิ้งหัวและท้ายของอลูมิเนียมแต่ละเส้น (รวม 150 mm)
+var MIN_GAP_BETWEEN_SIZES = 300; // mm ขนาดเส้นที่เลือกใน Auto-Optimize ต้องห่างกันอย่างน้อย
+
+/* ── IndexedDB ── */
+var db=null, curProjId=null, curProjName='โปรเจกต์ใหม่';
+function openDB(){
+  return new Promise(function(res,rej){
+    var req=indexedDB.open('AlumCutterAdv_v1',1);
+    req.onupgradeneeded=function(e){
+      var d=e.target.result;
+      if(!d.objectStoreNames.contains('projects'))
+        d.createObjectStore('projects',{keyPath:'id',autoIncrement:true});
+    };
+    req.onsuccess=function(e){db=e.target.result;res(db);};
+    req.onerror=function(e){rej(e.target.error);};
+  });
+}
+function idbAll(){return new Promise(function(res,rej){var r=db.transaction('projects','readonly').objectStore('projects').getAll();r.onsuccess=function(e){res(e.target.result);};r.onerror=function(e){rej(e.target.error);};})}
+function idbGet(id){return new Promise(function(res,rej){var r=db.transaction('projects','readonly').objectStore('projects').get(id);r.onsuccess=function(e){res(e.target.result);};r.onerror=function(e){rej(e.target.error);};})}
+function idbPut(obj){return new Promise(function(res,rej){var r=db.transaction('projects','readwrite').objectStore('projects').put(obj);r.onsuccess=function(e){res(e.target.result);};r.onerror=function(e){rej(e.target.error);};})}
+function idbDel(id){return new Promise(function(res,rej){var r=db.transaction('projects','readwrite').objectStore('projects').delete(id);r.onsuccess=function(e){res(e.target.result);};r.onerror=function(e){rej(e.target.error);};})}
+
+function getSnap(){return{profiles:profiles.map(function(p){return Object.assign({},p);}),pieces:pieces.map(function(p){return Object.assign({},p);})};}
+function applySnap(snap){
+  profiles=[];pid=0;
+  ['profileBody','profileBody_3'].forEach(function(id){var el=document.getElementById(id);if(el)el.innerHTML='';});
+  pieces=[];rid=0;
+  ['pieceBody','pieceBody_3'].forEach(function(id){var el=document.getElementById(id);if(el)el.innerHTML='';});
+  ['results','results_3'].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.add('hidden');});
+  var os=document.getElementById('optSection');if(os)os.classList.add('hidden');
+  lastResult=null;lastOptResult=null;
+  (snap.profiles||[]).forEach(function(p){if(p.id>pid)pid=p.id;profiles.push(Object.assign({},p));renderProfileRow(Object.assign({},p));});
+  updatePieceDropdowns();
+  (snap.pieces||[]).forEach(function(r){if(r.id>rid)rid=r.id;pieces.push(Object.assign({},r));renderPieceRow(Object.assign({},r));});
+  updateSummary();
+}
+function fmtDate(iso){try{var d=new Date(iso);return d.toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'})+' '+d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});}catch(ex){return '';}}
+function setProjBar(saved,isoDate){
+  document.getElementById('projBarName').textContent=curProjName;
+  var sub=document.getElementById('projBarSub');
+  if(saved&&isoDate){sub.textContent='💾 บันทึกแล้ว · '+fmtDate(isoDate);sub.className='proj-sub saved';setTimeout(function(){sub.className='proj-sub';},3000);}
+  else{sub.textContent='ยังไม่ได้บันทึก';sub.className='proj-sub';}
+}
+async function saveProject(){
+  if(!db){alert('ฐานข้อมูลยังไม่พร้อม');return;}
+  if(curProjId&&curProjName!=='โปรเจกต์ใหม่'){await doSave(curProjName);}
+  else{var inp=document.getElementById('saveNameInput');inp.value=(curProjName==='โปรเจกต์ใหม่'?'':curProjName);document.getElementById('saveModal').classList.remove('hidden');setTimeout(function(){inp.focus();},80);}
+}
+async function confirmSave(){var name=(document.getElementById('saveNameInput').value||'').trim();if(!name){alert('กรุณาตั้งชื่อโปรเจกต์');return;}closeSaveModal();await doSave(name);}
+async function doSave(name){curProjName=name;var now=new Date().toISOString();var obj=Object.assign({name:name,updatedAt:now},getSnap());if(curProjId)obj.id=curProjId;else obj.createdAt=now;var newId=await idbPut(obj);if(!curProjId)curProjId=newId;setProjBar(true,now);}
+function closeSaveModal(){document.getElementById('saveModal').classList.add('hidden');}
+async function newProject(){
+  if(pieces.length>0||profiles.length>0||(typeof allData!=='undefined'&&allData.length>0)){
+    if(!confirm('เริ่มโปรเจกต์ใหม่?\n(ข้อมูลทั้งหมด รวม Profile Processor ที่ยังไม่บันทึกจะหายไป)'))return;
+  }
+  curProjId=null;curProjName='โปรเจกต์ใหม่';
+  applySnap({profiles:[],pieces:[]});
+  // Clear Profile Processor too
+  if(typeof allData!=='undefined'){allData=[];filteredData=[];}
+  var sb=document.getElementById('statsBar');if(sb)sb.classList.remove('show');
+  var pr=document.getElementById('p1Results');if(pr)pr.classList.remove('show');
+  var tb=document.getElementById('transferBanner');if(tb)tb.classList.remove('show');
+  var tbody=document.getElementById('tableBody');if(tbody)tbody.innerHTML='';
+  var fi=document.getElementById('fileInfo');if(fi)fi.classList.remove('show');
+  var fin=document.getElementById('fileInput');if(fin)fin.value='';
+  var bp=document.getElementById('btnProcess');if(bp)bp.disabled=true;
+  ['badge1','badge2','badge3'].forEach(function(id){var el=document.getElementById(id);if(el){el.textContent='0';el.classList.add('dim');}});
+  addProfileData('รายการตัด','6400',2);
+  updatePieceDropdowns();setProjBar(false,null);
+}
+async function openProjModal(){if(!db){alert('ฐานข้อมูลยังไม่พร้อม');return;}await renderProjList();document.getElementById('projModal').classList.remove('hidden');}
+function closeProjModal(){document.getElementById('projModal').classList.add('hidden');}
+async function renderProjList(){
+  var all=await idbAll();all.sort(function(a,b){return (b.updatedAt||'').localeCompare(a.updatedAt||'');});
+  var body=document.getElementById('projListBody');body.innerHTML='';
+  if(!all.length){body.innerHTML='<div class="no-proj"><div class="big">📭</div>ยังไม่มีโปรเจกต์</div>';return;}
+  all.forEach(function(p){
+    var div=document.createElement('div');div.className='proj-item'+(p.id===curProjId?' active':'');
+    var pc=(p.pieces||[]).length,prf=(p.profiles||[]).length,upd=p.updatedAt?fmtDate(p.updatedAt):'—';
+    div.innerHTML='<div class="pi-info" onclick="loadProject('+p.id+')">'+'<div class="pi-name">'+escH(p.name)+'</div>'+'<div class="pi-sub">'+prf+' โปรไฟล์ · '+pc+' รายการ · '+upd+'</div>'+'</div>'+'<div class="pi-acts"><button class="btn btn-g btn-sm" onclick="loadProject('+p.id+')">📂 เปิด</button><button class="btn btn-d btn-sm" onclick="delProject('+p.id+',event)">🗑</button></div>';
+    body.appendChild(div);
+  });
+}
+async function loadProject(id){var proj=await idbGet(id);if(!proj){alert('ไม่พบโปรเจกต์');return;}curProjId=id;curProjName=proj.name;applySnap(proj);setProjBar(true,proj.updatedAt);closeProjModal();}
+async function delProject(id,event){event.stopPropagation();if(!confirm('ลบโปรเจกต์นี้?'))return;await idbDel(id);if(curProjId===id){curProjId=null;setProjBar(false,null);}await renderProjList();}
+document.addEventListener('keydown',function(e){if((e.ctrlKey||e.metaKey)&&e.key==='s'){e.preventDefault();saveProject();}});
+
+/* ── Profiles ── */
+function parseBarLens(val){return String(val).split(/[,\s]+/).map(function(s){return parseInt(s.trim(),10);}).filter(function(n){return n>0;}).sort(function(a,b){return b-a;});}
+function addProfileData(name,barLen,kerf){
+  // ถ้ามี profile ชื่อเดียวกัน + barLen เดียวกันอยู่แล้ว → return ตัวเดิม
+  var existing=profiles.find(function(p){return p.name===name && p.barLen===String(barLen);});
+  if(existing)return existing;if(name===undefined)name='';if(barLen===undefined)barLen='6400';if(kerf===undefined)kerf=2;var p={id:++pid,name:name,barLen:String(barLen),kerf:kerf};profiles.push(p);renderProfileRow(p);updatePieceDropdowns();return p;}
+function renderProfileRow(p){
+  // Render in both page2 and page3 tables
+  ['profileBody','profileBody_3'].forEach(function(bodyId){
+    var tb=document.getElementById(bodyId);
+    if(!tb)return;
+    _renderProfileRowInto(p, tb);
+  });
+}
+function _renderProfileRowInto(p, tb){var tr=document.createElement('tr');tr.id=(tb.id==='profileBody_3'?'prof_3-':'prof-')+p.id;
+  var stockVal=(p.stock===undefined||p.stock===null||p.stock==='')?'':p.stock;
+  tr.innerHTML='<td><input type="text" value="'+escA(p.name)+'" onchange="updateProfile('+p.id+',\'name\',this.value)" style="width:100%"></td>'
+    +'<td><input type="text" value="'+escA(p.barLen)+'" placeholder="เช่น 6400" onchange="updateProfile('+p.id+',\'barLen\',this.value)" oninput="updateProfBarLen('+p.id+',this.value)" style="width:100%"></td>'
+    +'<td><input type="number" value="'+stockVal+'" min="0" max="99999" placeholder="∞" title="ว่าง = ไม่จำกัด" onchange="updateProfileStock('+p.id+',this.value)" style="width:100%"></td>'
+    +'<td><input type="number" value="'+p.kerf+'" min="0" max="50" step="0.5" onchange="updateProfile('+p.id+',\'kerf\',+this.value)" oninput="updateProfile('+p.id+',\'kerf\',+this.value)" style="width:100%"></td>'
+    +'<td><button class="btn btn-d btn-sm" onclick="deleteProfile('+p.id+')">✕</button></td>';
+  tb.appendChild(tr);
+}
+
+function updateProfileStock(id,val){
+  var p=profiles.find(function(x){return x.id===id;});
+  if(!p)return;
+  val=String(val).trim();
+  if(val===''||val==='0'){p.stock=null;}
+  else{var n=parseInt(val,10);p.stock=isNaN(n)||n<=0?null:n;}
+}
+function addProfile(){addProfileData('โปรไฟล์ใหม่','6400',2);}
+function updateProfile(id,field,val){var p=profiles.find(function(x){return x.id===id;});if(p){p[field]=val;if(field==='name')updatePieceDropdowns();updateSummary();}}
+function updateProfBarLen(id,val){var p=profiles.find(function(x){return x.id===id;});if(p)p.barLen=val;}
+function deleteProfile(id){
+  if(profiles.length<=1){alert('ต้องมีอย่างน้อย 1 โปรไฟล์');return;}
+  profiles=profiles.filter(function(x){return x.id!==id;});
+  ['prof-'+id,'prof_3-'+id].forEach(function(rowId){var el=document.getElementById(rowId);if(el)el.parentNode.removeChild(el);});
+  updatePieceDropdowns();
+  syncAllSummaries();
+}
+function updatePieceDropdowns(){document.querySelectorAll('.prof-sel').forEach(function(sel){var cur=sel.value;sel.innerHTML=profiles.map(function(p){return '<option value="'+p.id+'">'+escH(p.name)+'</option>';}).join('');if(profiles.find(function(x){return x.id==cur;}))sel.value=cur;});}
+
+/* ── Pieces ── */
+function addRow(profId,label,size,qty){
+  if(!profiles.length){alert('กรุณาเพิ่มโปรไฟล์ก่อน');return;}
+  var selProf=profId||(lastProfId&&profiles.find(function(p){return p.id===lastProfId;})&&lastProfId)||profiles[0].id;
+  var r={id:++rid,profId:selProf,label:label||'',size:size||'',qty:qty||1};
+  pieces.push(r);renderPieceRow(r);updateSummary();
+}
+function renderPieceRow(r){
+  ['pieceBody','pieceBody_3'].forEach(function(bodyId){
+    var tb=document.getElementById(bodyId);
+    if(!tb)return;
+    _renderPieceRowInto(r, tb);
+  });
+}
+function _renderPieceRowInto(r, tb){var tr=document.createElement('tr');tr.id=(tb.id==='pieceBody_3'?'row_3-':'row-')+r.id;
+  var opts=profiles.map(function(p){return '<option value="'+p.id+'"'+(p.id===r.profId?' selected':'')+'>'+escH(p.name)+'</option>';}).join('');
+  tr.innerHTML='<td><select class="prof-sel" onchange="updatePiece('+r.id+',\'profId\',+this.value)">'+opts+'</select></td>'
+    +'<td><input type="text" value="'+escA(r.label)+'" placeholder="เช่น M112" onchange="updatePiece('+r.id+',\'label\',this.value)"></td>'
+    +'<td><input type="number" value="'+r.size+'" min="1" max="99999" placeholder="550" onchange="updatePiece('+r.id+',\'size\',+this.value)" oninput="updatePiece('+r.id+',\'size\',+this.value)"></td>'
+    +'<td><input type="number" value="'+r.qty+'" min="1" max="9999" placeholder="1" onchange="updatePiece('+r.id+',\'qty\',+this.value)" oninput="updatePiece('+r.id+',\'qty\',+this.value)"></td>'
+    +'<td id="'+(tb.id==='pieceBody_3'?'total_3-':'total-')+r.id+'" style="color:var(--muted);font-size:12px">'+fmtN(r.size*r.qty)+'</td>'
+    +'<td><button class="btn btn-d btn-sm" onclick="deleteRow('+r.id+')">✕</button></td>';
+  tb.appendChild(tr);
+}
+function updatePiece(id,field,val){
+  var r=pieces.find(function(x){return x.id===id;});
+  if(r){
+    r[field]=val;
+    if(field==='profId')lastProfId=val;
+    ['total-'+id,'total_3-'+id].forEach(function(tid){var tot=document.getElementById(tid);if(tot)tot.textContent=fmtN((+r.size||0)*(+r.qty||0));});
+    syncAllSummaries();
+  }
+}
+function deleteRow(id){
+  pieces=pieces.filter(function(x){return x.id!==id;});
+  ['row-'+id,'row_3-'+id].forEach(function(rowId){var el=document.getElementById(rowId);if(el)el.parentNode.removeChild(el);});
+  syncAllSummaries();
+}
+function clearAll(){
+  if(!confirm('ล้างทุกอย่างและเริ่มใหม่?\n(รายการชิ้นงาน, โปรไฟล์ และผลลัพธ์ทั้งหมดจะถูกล้าง)'))return;
+  // Reset to initial state - same as opening program first time
+  pieces=[];rid=0;
+  profiles=[];pid=0;
+  ['pieceBody','pieceBody_3','profileBody','profileBody_3'].forEach(function(id){var el=document.getElementById(id);if(el)el.innerHTML='';});
+  ['results','results_3','optSection'].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.add('hidden');});
+  ['importedBadge','importedBadge_3'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='none';});
+  lastResult=null;lastOptResult=null;
+  // Add default profile back
+  addProfileData('รายการตัด','6400',2);
+  updatePieceDropdowns();
+  syncAllSummaries();
+}
+function updateSummary(){syncAllSummaries();}
+
+/* ── Sample ── */
+function loadSample(){
+  if(pieces.length&&!confirm('แทนที่ข้อมูลเดิมด้วยตัวอย่าง?'))return;
+  pieces=[];document.getElementById('pieceBody').innerHTML='';rid=0;
+  var glId=profiles.find(function(p){return p.name==='รายการตัด';});glId=glId?glId.id:addProfileData('รายการตัด','6400',2).id;
+  var subId=glId;
+  updatePieceDropdowns();
+  var gl=[['M112',550,2],['M112',950,2],['M109',550,2],['M109',950,2],['M104',550,2],['M104',500,2],['M118',550,2],['M118',950,2],['M211',550,2],['M211',1050,2],['M206',550,2],['M206',1050,2],['S118',350,2],['S118',810,2],['S105',550,2],['S105',950,2],['S112',550,2],['S112',500,2],['S114',550,2],['S114',950,2],['S212',560,2],['S212',1050,2]];
+  var sub=[['ซับเฟรม',340,1],['ซับเฟรม',860,1],['ซับเฟรม',830,1],['ซับเฟรม',850,2],['ซับเฟรม',1890,2],['ซับเฟรม',540,2],['ซับเฟรม',550,5],['ซับเฟรม',1500,4],['ซับเฟรม',3000,4],['ซับเฟรม',840,2],['ซับเฟรม',1900,2],['ซับเฟรม',6400,8]];
+  gl.forEach(function(x){addRow(glId,x[0],x[1],x[2]);});sub.forEach(function(x){addRow(subId,x[0],x[1],x[2]);});
+  updateSummary();
+}
+
+/* ═══════════════════════════════════════
+   ALGORITHM: Column-Generation / ILP
+═══════════════════════════════════════ */
+function solve(pieceList, barLens, kerf, stockMap) {
+  var lens = barLens.slice().sort(function(a,b){return b-a;});
+  /* สร้างเส้นพิเศษสำหรับชิ้นที่ใหญ่กว่าทุก barLen */
+  var initialMaxL = lens[0] || 0;
+  var oversizeSpecial = {};
+  pieceList.forEach(function(p){
+    if(p.size > 0 && p.qty > 0 && p.size > initialMaxL - 2*END_TRIM){
+      var specialLen = p.size + 2*END_TRIM;
+      if(!oversizeSpecial[specialLen] && lens.indexOf(specialLen) < 0){
+        lens.push(specialLen);
+        oversizeSpecial[specialLen] = true;
+      }
+    }
+  });
+  lens.sort(function(a,b){return b-a;});
+  var allItems=[];
+  pieceList.forEach(function(p){
+    if(p.size>0&&p.qty>0){
+      for(var i=0;i<p.qty;i++)allItems.push({label:p.label||'',size:p.size});
+    }
+  });
+  var maxL=lens[0]||0;
+  var oversized=allItems.filter(function(it){return it.size>maxL-2*END_TRIM;});
+  var valid=allItems.filter(function(it){return it.size>0&&it.size<=maxL-2*END_TRIM;});
+  if(!valid.length) return {bars:[],oversized:oversized};
+  var bySize={};
+  valid.forEach(function(it){if(!bySize[it.size])bySize[it.size]=[];bySize[it.size].push(it);});
+  var sizes=Object.keys(bySize).map(Number).sort(function(a,b){return b-a;});
+  var ptr={};sizes.forEach(function(s){ptr[s]=0;});
+  function rem(s){return bySize[s].length-ptr[s];}
+  function take(s){return bySize[s][ptr[s]++];}
+  function makePattern(L){
+    var eligible=sizes.filter(function(s){return s<=L&&rem(s)>0;});
+    if(!eligible.length)return[];
+    var pat=[],space=L-2*END_TRIM,first=true,td={};
+    eligible.forEach(function(s){td[s]=rem(s);});
+    var improved=true;
+    while(improved){
+      improved=false;
+      for(var i=0;i<eligible.length;i++){
+        var s=eligible[i];
+        if(td[s]<=0)continue;
+        var need=first?s:s+kerf;
+        if(need<=space){pat.push(s);td[s]--;space-=need;first=false;improved=true;break;}
+      }
+    }
+    return pat;
+  }
+  function patUsed(pat){return pat.reduce(function(a,s,i){return a+s+(i?kerf:0);},0);}
+  var bars=[],limit=valid.length+200;
+  var stockUsedSolve = {};
+  for(var iter=0;iter<limit;iter++){
+    if(!sizes.some(function(s){return rem(s)>0;}))break;
+    var bestPat=null,bestEff=-1,bestL=-1;
+    // Try ALL bar lengths and pick best efficiency
+    for(var li=0;li<lens.length;li++){
+      var L=lens[li];
+      if(!sizes.some(function(s){return s<=L&&rem(s)>0;}))continue;
+      /* ตรวจ stock */
+      if(stockMap && stockMap[L] !== undefined && stockMap[L] !== null){
+        if((stockUsedSolve[L] || 0) >= stockMap[L]) continue;
+      }
+      var pat=makePattern(L);
+      if(!pat.length)continue;
+      var used=patUsed(pat);
+      var usable=L-2*END_TRIM;
+      var eff=used/usable;
+      // prefer higher eff (efficiency on usable area)
+      // tiebreak: smaller bar (less material consumed)
+      if(eff>bestEff+0.0001||(Math.abs(eff-bestEff)<0.0001&&L<bestL)){
+        bestPat=pat;bestEff=eff;bestL=L;
+      }
+    }
+    if(!bestPat)break;
+    var pc={};bestPat.forEach(function(s){pc[s]=(pc[s]||0)+1;});
+    var times=Infinity;
+    sizes.forEach(function(s){if(pc[s])times=Math.min(times,Math.floor(rem(s)/pc[s]));});
+    if(!isFinite(times)||times<1)times=1;
+    var usedLen=patUsed(bestPat);
+    /* จำกัด times ตาม stock ที่เหลือ */
+    if(stockMap && stockMap[bestL] !== undefined && stockMap[bestL] !== null){
+      var remStock = stockMap[bestL] - (stockUsedSolve[bestL] || 0);
+      if(times > remStock) times = remStock;
+    }
+    if(times < 1) break;
+    for(var t=0;t<times;t++){
+      bars.push({pieces:bestPat.map(function(s){return take(s);}),used:usedLen,barLen:bestL});
+      stockUsedSolve[bestL] = (stockUsedSolve[bestL] || 0) + 1;
+    }
+  }
+  /* คำนวณ unfulfilled - pieces ที่ยังเหลือ */
+  var unfulfilledSolve = [];
+  sizes.forEach(function(s){
+    while(rem(s) > 0) unfulfilledSolve.push(take(s));
+  });
+  return {bars:bars,oversized:oversized,unfulfilled:unfulfilledSolve,stockUsed:stockUsedSolve};
+}
+
+function solveWithOption(pieceList, barLens, kerf, maxLabels, stockMap) {
+  /* ไม่จำกัด label → ใช้ solve() เดิม */
+  if (!maxLabels || maxLabels >= 999) return solve(pieceList, barLens, kerf, stockMap);
+
+  /* ── Label-Aware Best-Fit Decreasing ──
+     Pack ทุกชิ้นพร้อมกัน แต่แต่ละ bar รับได้สูงสุด maxLabels label
+     ทำให้เศษในท่อนที่มีอยู่ถูกใช้ข้ามชิ้นงาน label อื่นได้ */
+  var lens = barLens.slice().sort(function(a,b){return b-a;});
+  /* ──────── สร้างเส้นพิเศษสำหรับชิ้นงานที่ใหญ่กว่าทุก barLen ที่มี ──────── */
+  var initialMaxL = lens[0] || 0;
+  var oversizeSpecial = {};  /* track special bar sizes added */
+  pieceList.forEach(function(p){
+    if(p.size > 0 && p.qty > 0 && p.size > initialMaxL - 2*END_TRIM){
+      var specialLen = p.size + 2*END_TRIM;
+      if(!oversizeSpecial[specialLen] && lens.indexOf(specialLen) < 0){
+        lens.push(specialLen);
+        oversizeSpecial[specialLen] = true;
+      }
+    }
+  });
+  lens.sort(function(a,b){return b-a;}); /* re-sort */
+  var maxL = lens[0] || 0;
+  var stockUsed = {};
+  var unfulfilled = [];
+
+  /* ขยาย pieceList → allItems */
+  var allItems = [];
+  pieceList.forEach(function(p) {
+    if (p.size > 0 && p.qty > 0) {
+      var lbl = (p.label && p.label.trim() !== '') ? p.label.trim() : '__noLabel__';
+      for (var i = 0; i < p.qty; i++) allItems.push({label: lbl, size: p.size});
+    }
+  });
+
+  var oversized = allItems.filter(function(it){ return it.size > maxL; });
+  var valid = allItems.filter(function(it){ return it.size > 0 && it.size <= maxL; });
+  if (!valid.length) return {bars: [], oversized: oversized};
+
+  /* เรียงชิ้นงานใหญ่ → เล็ก (FFD) */
+  valid.sort(function(a,b){ return b.size - a.size; });
+
+  /* bins: {pieces, remaining, barLen, used, labels[]} */
+  var bins = [];
+
+  valid.forEach(function(piece) {
+    /* หา bin ที่พอใส่ + label ไม่เกิน maxLabels → เลือก remaining น้อยสุด (Best-Fit) */
+    var bestIdx = -1, bestRem = Infinity;
+    for (var bi = 0; bi < bins.length; bi++) {
+      var bin = bins[bi];
+      var need = piece.size + (bin.pieces.length > 0 ? kerf : 0);
+      if (bin.remaining < need) continue;
+      var hasSize = bin.sizes.indexOf(piece.size) >= 0;
+      if (!hasSize && bin.sizes.length >= maxLabels) continue;
+      var rem = bin.remaining - need;
+      if (rem < bestRem) { bestRem = rem; bestIdx = bi; }
+    }
+
+    if (bestIdx === -1) {
+      /* เปิด bin ใหม่ — เลือก barLen ที่ใส่ piece นี้ได้มากสุด (highest packing density)
+         เพราะ bar ใหญ่อาจใส่หลายชิ้นได้ทำให้ eff โดยรวมดีกว่า bar เล็กที่ waste 1 ชิ้น */
+      var chosen = -1;
+      var bestScore = -1;
+      for (var li = 0; li < lens.length; li++) {
+        var L = lens[li];
+        if (L < piece.size + 2*END_TRIM) continue;
+        /* ตรวจ stock — ถ้ามี limit และใช้ครบแล้ว ข้าม */
+        if (stockMap && stockMap[L] !== undefined && stockMap[L] !== null) {
+          var usedSoFar = stockUsed[L] || 0;
+          if (usedSoFar >= stockMap[L]) continue;
+        }
+        var usable = L - 2*END_TRIM;
+        var maxFit = Math.floor((usable + kerf) / (piece.size + kerf));
+        if (maxFit < 1) maxFit = 1;
+        var packed = maxFit*piece.size + (maxFit-1)*kerf;
+        var density = packed / usable;
+        if (density > bestScore + 0.0001 || (Math.abs(density-bestScore) < 0.0001 && L < chosen)) {
+          bestScore = density; chosen = L;
+        }
+      }
+      if (chosen === -1) {
+        /* stock หมดทุกขนาด — เก็บเป็น unfulfilled และข้ามไป */
+        unfulfilled.push(piece);
+        return;
+      }
+      /* บันทึก stock ที่ใช้ */
+      stockUsed[chosen] = (stockUsed[chosen] || 0) + 1;
+      bins.push({
+        pieces: [piece], barLen: chosen,
+        used: piece.size, remaining: chosen - 2*END_TRIM - piece.size,
+        sizes: [piece.size],
+        labels: [piece.label]
+      });
+    } else {
+      var bin = bins[bestIdx];
+      var need = piece.size + kerf;
+      bin.remaining -= need;
+      bin.used += need;
+      bin.pieces.push(piece);
+      if (bin.sizes.indexOf(piece.size) < 0) bin.sizes.push(piece.size);
+      if (bin.labels.indexOf(piece.label) < 0) bin.labels.push(piece.label);
+    }
+  });
+
+  var bars = bins.map(function(bin){
+    return {pieces: bin.pieces, used: bin.used, barLen: bin.barLen};
+  });
+  return {bars: bars, oversized: oversized, unfulfilled: unfulfilled, stockUsed: stockUsed};
+}
+
+/* ═══════════════════════════════════════
+   AUTO-OPTIMIZE: find best ≤5 bar lengths
+   from standard set 4500–6400 step 100
+   Target: Loss < 1.5%  (Eff ≥ 98.5%)
+═══════════════════════════════════════ */
+function calcEff(bars){
+  // Efficiency: used / usable (usable = barLen - 2*END_TRIM)
+  var totUsable=bars.reduce(function(s,b){return s+(b.barLen-2*END_TRIM);},0);
+  var totUsed=bars.reduce(function(s,b){return s+b.used;},0);
+  return totUsable>0?totUsed/totUsable:0;
+}
+
+function setLoadingMsg(msg){
+  var el=document.getElementById('optLoadingMsg');
+  if(el)el.textContent=msg;
+}
+function setOptProgress(pct,detail){
+  var bar=document.getElementById('optProgressBar');
+  var pctEl=document.getElementById('optProgressPct');
+  var detEl=document.getElementById('optProgressDetail');
+  if(bar)bar.style.width=Math.min(100,Math.round(pct))+'%';
+  if(pctEl)pctEl.textContent=Math.min(100,Math.round(pct))+'%';
+  if(detEl)detEl.textContent=detail||'';
+}
+
+async function optimizeBarLengths(pieceList, kerf, target, sameLabel, maxSizes, stockMap) {
+  if(!maxSizes) maxSizes=5;
+  var std=[];for(var l=4500;l<=6400;l+=100)std.push(l);
+  var best={eff:-1,lens:null,result:null,targetReached:false,levelAchieved:0};
+
+  function tryLens(candidate){
+    /* เงื่อนไข: ขนาดเส้นที่เลือกในชุดนี้ต้องห่างกันอย่างน้อย MIN_GAP_BETWEEN_SIZES mm */
+    if(candidate.length > 1){
+      var sorted = candidate.slice().sort(function(a,b){return a-b;});
+      for(var ii=1; ii<sorted.length; ii++){
+        if(sorted[ii] - sorted[ii-1] < MIN_GAP_BETWEEN_SIZES) return;
+      }
+    }
+    /* Use solveWithOption to honor sameLabel constraint */
+    var res=solveWithOption(pieceList,candidate,kerf,sameLabel,stockMap);
+    if(!res.bars.length)return;
+    var eff=calcEff(res.bars);
+    if(eff>best.eff){best.eff=eff;best.lens=candidate.slice();best.result=res;}
+  }
+  function yld(){return new Promise(function(r){setTimeout(r,0);});}
+
+  /* Level 1: 20 ชุด */
+  setLoadingMsg('กำลังค้นหา... Level 1 (1 ขนาด)');
+  setOptProgress(0,'0 / 20 ชุด');
+  await yld();
+  for(var i=0;i<std.length;i++){
+    tryLens([std[i]]);
+    setOptProgress((i+1)/20*2,'Level 1: '+(i+1)+' / 20 ชุด');
+  }
+  if(best.eff>=target){best.targetReached=true;best.levelAchieved=1;return best;}
+  if(maxSizes<2)return best;
+
+  /* Level 2: 190 ชุด */
+  setLoadingMsg('กำลังค้นหา... Level 2 (2 ขนาด) — 190 ชุด');
+  var cnt2=0,total2=190;
+  await yld();
+  for(var i=0;i<std.length;i++){
+    for(var j=i+1;j<std.length;j++){
+      tryLens([std[j],std[i]]);
+      cnt2++;
+      if(cnt2%20===0){setOptProgress(2+cnt2/total2*3,'Level 2: '+cnt2+' / '+total2+' ชุด');await yld();}
+    }
+  }
+  setOptProgress(5,'Level 2: '+total2+' / '+total2+' ชุด');
+  if(best.eff>=target){best.targetReached=true;best.levelAchieved=2;return best;}
+  if(maxSizes<3)return best;
+
+  /* Level 3: 1,140 ชุด */
+  setLoadingMsg('กำลังค้นหา... Level 3 (3 ขนาด) — 1,140 ชุด');
+  var cnt3=0,total3=1140;
+  await yld();
+  for(var i=0;i<std.length;i++){
+    for(var j=i+1;j<std.length;j++){
+      for(var k=j+1;k<std.length;k++){
+        tryLens([std[k],std[j],std[i]]);
+        cnt3++;
+        if(cnt3%100===0){setOptProgress(5+cnt3/total3*10,'Level 3: '+cnt3+' / '+total3+' ชุด');await yld();}
+      }
+    }
+  }
+  setOptProgress(15,'Level 3: '+total3+' / '+total3+' ชุด');
+  if(best.eff>=target){best.targetReached=true;best.levelAchieved=3;return best;}
+  if(maxSizes<4)return best;
+
+  /* Level 4: 4,845 ชุด */
+  setLoadingMsg('กำลังค้นหา... Level 4 (4 ขนาด) — 4,845 ชุด');
+  var cnt4=0,total4=4845;
+  await yld();
+  for(var i=0;i<std.length;i++){
+    for(var j=i+1;j<std.length;j++){
+      for(var k=j+1;k<std.length;k++){
+        for(var m=k+1;m<std.length;m++){
+          tryLens([std[m],std[k],std[j],std[i]]);
+          cnt4++;
+          if(cnt4%200===0){setOptProgress(15+cnt4/total4*25,'Level 4: '+cnt4+' / '+total4+' ชุด');await yld();}
+        }
+      }
+    }
+  }
+  setOptProgress(40,'Level 4: '+total4+' / '+total4+' ชุด');
+  if(best.eff>=target){best.targetReached=true;best.levelAchieved=4;return best;}
+  if(maxSizes<5)return best;
+
+  /* Level 5: 15,504 ชุด */
+  setLoadingMsg('กำลังค้นหา... Level 5 (5 ขนาด) — 15,504 ชุด');
+  var cnt5=0,total5=15504;
+  await yld();
+  for(var i=0;i<std.length;i++){
+    for(var j=i+1;j<std.length;j++){
+      for(var k=j+1;k<std.length;k++){
+        for(var m=k+1;m<std.length;m++){
+          for(var n=m+1;n<std.length;n++){
+            tryLens([std[n],std[m],std[k],std[j],std[i]]);
+            cnt5++;
+          }
+          if((m%3)===0){setOptProgress(40+cnt5/total5*60,'Level 5: '+cnt5+' / '+total5+' ชุด');await yld();}
+        }
+      }
+    }
+  }
+  setOptProgress(98,'Level 5: '+total5+' / '+total5+' ชุด ✓');
+  if(best.eff>=target){best.targetReached=true;best.levelAchieved=5;return best;}
+  if(maxSizes<6)return best;
+
+  /* Level 6: 54,264 ชุด */
+  setLoadingMsg('กำลังค้นหา... Level 6 (6 ขนาด) — 54,264 ชุด');
+  var cnt6=0,total6=54264;
+  await yld();
+  for(var i=0;i<std.length;i++){
+    for(var j=i+1;j<std.length;j++){
+      for(var k=j+1;k<std.length;k++){
+        for(var m=k+1;m<std.length;m++){
+          for(var n=m+1;n<std.length;n++){
+            for(var o=n+1;o<std.length;o++){
+              tryLens([std[o],std[n],std[m],std[k],std[j],std[i]]);
+              cnt6++;
+            }
+          }
+          if((m%2)===0){setOptProgress(40+cnt6/total6*60,'Level 6: '+cnt6+' / '+total6+' ชุด');await yld();}
+        }
+      }
+    }
+  }
+  setOptProgress(100,'Level 6: '+total6+' / '+total6+' ชุด ✓');
+  if(best.eff>=target){best.targetReached=true;best.levelAchieved=6;}
+  return best;
+}
+
+/* ═══════════════════════════════════════
+   CALCULATE
+═══════════════════════════════════════ */
+function getLabelLimit(){
+  var active=document.querySelector('#llBtns .ll-btn.active')||document.querySelector('#llBtns_3 .ll-btn.active');
+  return active?parseInt(active.getAttribute('data-val'),10):3;
+}
+function setLabelLimit(val){
+  document.querySelectorAll('#llBtns .ll-btn, #llBtns_3 .ll-btn').forEach(function(b){
+    b.classList.toggle('active',parseInt(b.getAttribute('data-val'),10)===val);
+  });
+}
+function getMaxSizes(){
+  var active=document.querySelector('#msBtns .ll-btn.active');
+  return active?parseInt(active.getAttribute('data-val'),10):4;
+}
+function setMaxSizes(val){
+  document.querySelectorAll('#msBtns .ll-btn').forEach(function(b){
+    b.classList.toggle('active',parseInt(b.getAttribute('data-val'),10)===val);
+  });
+  updateOptHeadTitle();
+}
+function updateOptHeadTitle(){
+  var n=getMaxSizes();
+  var el=document.getElementById('optHeadTitle');
+  if(el)el.innerHTML='🎯 Auto-Optimize — หาขนาดเส้นที่ดีที่สุด (4500–6400 mm, ≤ '+n+' ขนาด, เป้าหมาย Loss &lt; 1.5%)';
+}
+
+async function calculateStandard(){
+  if(!pieces.length){alert('กรุณาเพิ่มรายการชิ้นงานก่อน');return;}
+  var valid=pieces.filter(function(p){return p.size>0&&p.qty>0;});
+  if(!valid.length){alert('กรุณากรอกขนาดและจำนวนชิ้นงาน');return;}
+  var skipped=pieces.length-valid.length;
+  if(skipped>0){if(!confirm('มีชิ้นงาน '+skipped+' รายการที่ยังไม่ได้กรอกขนาด/จำนวน จะข้ามและคำนวณต่อ?'))return;}
+  try{
+    var sameLabel=getLabelLimit();
+    var nameGroups=buildNameGroups(valid);
+    var profIds=Object.keys(nameGroups);
+    var allResults=[];
+    for(var i=0;i<profIds.length;i++){
+      var ng=nameGroups[profIds[i]];
+      var barLens=ng.barLens.slice().sort(function(a,b){return b-a;});
+      if(!barLens.length){alert('โปรไฟล์ "'+ng.name+'" ไม่มีขนาดเส้น');return;}
+      var fakeProf={id:profIds[i],name:ng.name,barLen:barLens.join(','),kerf:ng.kerf};
+      var res=solveWithOption(ng.pieces,barLens,ng.kerf,sameLabel,ng.stockMap);
+      /* ตรวจสอบว่ามี piece ที่ stock ไม่พอตัดไหม */
+      if(res.unfulfilled && res.unfulfilled.length > 0){
+        var stockReport = '';
+        Object.keys(ng.stockMap).forEach(function(L){
+          var s = ng.stockMap[L];
+          if(s !== null){
+            var u = (res.stockUsed && res.stockUsed[L]) || 0;
+            stockReport += '\n  • ' + L + ' mm: ใช้ ' + u + ' / มี ' + s + ' เส้น';
+          }
+        });
+        var unfulfilledList = res.unfulfilled.map(function(p){return (p.label||'?')+' '+p.size+' mm';}).join(', ');
+        if(unfulfilledList.length > 200) unfulfilledList = unfulfilledList.substring(0, 200) + '...';
+        alert('⚠ Stock ไม่พอตัดสำหรับ Profile "'+ng.name+'"\n\nชิ้นงานที่ตัดไม่ได้: '+res.unfulfilled.length+' ชิ้น\n('+unfulfilledList+')\n\nสต๊อกที่ใช้:'+stockReport+'\n\nกรุณาเพิ่มจำนวนเส้นใน Stock หรือลดชิ้นงานลง');
+      }
+      allResults.push({prof:fakeProf,barLens:barLens,bars:res.bars,oversized:res.oversized,unfulfilled:res.unfulfilled||[],stockUsed:res.stockUsed||{}});
+    }
+    lastResult=allResults;
+    renderResults(allResults,'resultsBody',false);
+    document.getElementById('results').classList.remove('hidden');
+    document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'});
+  }catch(err){
+    console.error('calculateStandard error:',err);
+    alert('เกิดข้อผิดพลาด: '+err.message);
+  }
+}
+
+async function calculateAuto(){
+  if(!pieces.length){alert('กรุณาเพิ่มรายการชิ้นงานก่อน — ไปเพิ่มที่ Standard Optimizer ก่อนนะครับ');return;}
+  var valid=pieces.filter(function(p){return p.size>0&&p.qty>0;});
+  if(!valid.length){alert('กรุณากรอกขนาดและจำนวนชิ้นงาน');return;}
+  var skipped=pieces.length-valid.length;
+  if(skipped>0){if(!confirm('มีชิ้นงาน '+skipped+' รายการที่ยังไม่ได้กรอกขนาด/จำนวน จะข้ามและคำนวณต่อ?'))return;}
+  updateOptHeadTitle();
+  try{
+    var sameLabel=getLabelLimit();
+    var nameGroups=buildNameGroups(valid);
+    var profIds=Object.keys(nameGroups);
+    var allResults=[];
+    for(var i=0;i<profIds.length;i++){
+      var ng=nameGroups[profIds[i]];
+      var barLens=ng.barLens.slice().sort(function(a,b){return b-a;});
+      if(!barLens.length){alert('โปรไฟล์ "'+ng.name+'" ไม่มีขนาดเส้น');return;}
+      var fakeProf={id:profIds[i],name:ng.name,barLen:barLens.join(','),kerf:ng.kerf};
+      var res=solveWithOption(ng.pieces,barLens,ng.kerf,sameLabel,ng.stockMap);
+      /* ตรวจสอบว่ามี piece ที่ stock ไม่พอตัดไหม */
+      if(res.unfulfilled && res.unfulfilled.length > 0){
+        var stockReport = '';
+        Object.keys(ng.stockMap).forEach(function(L){
+          var s = ng.stockMap[L];
+          if(s !== null){
+            var u = (res.stockUsed && res.stockUsed[L]) || 0;
+            stockReport += '\n  • ' + L + ' mm: ใช้ ' + u + ' / มี ' + s + ' เส้น';
+          }
+        });
+        var unfulfilledList = res.unfulfilled.map(function(p){return (p.label||'?')+' '+p.size+' mm';}).join(', ');
+        if(unfulfilledList.length > 200) unfulfilledList = unfulfilledList.substring(0, 200) + '...';
+        alert('⚠ Stock ไม่พอตัดสำหรับ Profile "'+ng.name+'"\n\nชิ้นงานที่ตัดไม่ได้: '+res.unfulfilled.length+' ชิ้น\n('+unfulfilledList+')\n\nสต๊อกที่ใช้:'+stockReport+'\n\nกรุณาเพิ่มจำนวนเส้นใน Stock หรือลดชิ้นงานลง');
+      }
+      allResults.push({prof:fakeProf,barLens:barLens,bars:res.bars,oversized:res.oversized,unfulfilled:res.unfulfilled||[],stockUsed:res.stockUsed||{}});
+    }
+    lastResult=allResults;
+    renderResults(allResults,'resultsBody_3',false);
+    document.getElementById('results_3').classList.remove('hidden');
+    document.getElementById('optSection').classList.remove('hidden');
+    document.getElementById('optLoading').classList.remove('hidden');
+    document.getElementById('optBody').classList.add('hidden');
+    document.getElementById('optSection').scrollIntoView({behavior:'smooth',block:'nearest'});
+    await new Promise(function(r){setTimeout(r,60);});
+    var optResults=[];
+    for(var i=0;i<profIds.length;i++){
+      var ng=nameGroups[profIds[i]];
+      var fakeProf2={id:profIds[i],name:ng.name,barLen:ng.barLens.join(','),kerf:ng.kerf};
+      var opt=await optimizeBarLengths(ng.pieces,ng.kerf,0.985,sameLabel,getMaxSizes(),ng.stockMap);
+      var stdEff=allResults.find(function(r){return r.prof.id==profIds[i];});
+      optResults.push({prof:fakeProf2,kerf:ng.kerf,barLens:opt.lens,bars:opt.result?opt.result.bars:[],oversized:opt.result?opt.result.oversized:[],eff:opt.eff,stdEff:stdEff?calcEff(stdEff.bars):0,targetReached:opt.targetReached,levelAchieved:opt.levelAchieved});
+    }
+    lastOptResult=optResults;
+    document.getElementById('optLoading').classList.add('hidden');
+    renderOptResults(optResults);
+    document.getElementById('optBody').classList.remove('hidden');
+    document.getElementById('optSection').scrollIntoView({behavior:'smooth',block:'start'});
+  }catch(err){
+    console.error('calculateAuto error:',err);
+    alert('เกิดข้อผิดพลาด: '+err.message);
+    document.getElementById('optLoading').classList.add('hidden');
+  }
+}
+
+function buildNameGroups(valid){
+  /* รวม pieces ตาม profId */
+  var grouped={};
+  valid.forEach(function(p){if(!grouped[p.profId])grouped[p.profId]=[];grouped[p.profId].push(p);});
+  
+  /* รวม profile ตามชื่อ — เก็บ barLens และ stock จาก profile ทุก row ที่ชื่อตรงกัน */
+  var nameGroups={};
+  
+  /* Step 1: สร้าง nameGroup จาก profile ทุก row */
+  profiles.forEach(function(prof){
+    var key=prof.name;
+    if(!key||!key.trim())return;
+    if(!nameGroups[key])nameGroups[key]={pieces:[],barLens:[],stockMap:{},kerf:prof.kerf,name:prof.name};
+    /* รวม barLens และ stock จาก profile row นี้ */
+    var lens2=parseBarLens(prof.barLen);
+    lens2.forEach(function(l){
+      if(nameGroups[key].barLens.indexOf(l)<0)nameGroups[key].barLens.push(l);
+      /* stock: ถ้ามีหลาย row ที่มี barLen เดียวกัน → รวมกัน
+         ถ้า row ใดเป็น infinite (null) → ทั้งกลุ่มของ barLen นั้น = infinite */
+      var s=prof.stock;
+      if(s===undefined||s===null||s===''||isNaN(s)||+s<=0){
+        nameGroups[key].stockMap[l]=null; /* infinite */
+      }else if(nameGroups[key].stockMap[l]!==null){
+        /* ยังไม่ infinite — บวกเข้ากัน (กรณีหลาย row stock แยก) */
+        nameGroups[key].stockMap[l]=(nameGroups[key].stockMap[l]||0)+(+s);
+      }
+    });
+  });
+  
+  /* Step 2: เติม pieces เข้า nameGroup ตามชื่อ profile */
+  Object.keys(grouped).forEach(function(pid2){
+    var prof=profiles.find(function(x){return x.id==pid2;});
+    if(!prof)return;
+    var key=prof.name;
+    if(!nameGroups[key])return;
+    nameGroups[key].pieces=nameGroups[key].pieces.concat(grouped[pid2]);
+  });
+  
+  /* Step 3: ตัด nameGroup ที่ไม่มี pieces ออก */
+  var result={};
+  Object.keys(nameGroups).forEach(function(k){
+    if(nameGroups[k].pieces.length>0)result[k]=nameGroups[k];
+  });
+  return result;
+}
+
+/* ═══════════════════════════════════════
+   RENDER HELPERS
+═══════════════════════════════════════ */
+var COLORS=['#2563EB','#7C3AED','#DC2626','#059669','#D97706','#DB2777','#0891B2','#65A30D','#EA580C','#9333EA','#0D9488','#4F46E5','#C026D3','#16A34A','#B45309','#1D4ED8','#6D28D9','#B91C1C','#047857','#92400E'];
+var labelColors={},colorIdx=0;
+function pieceColor(label){if(!labelColors[label])labelColors[label]=COLORS[colorIdx++%COLORS.length];return labelColors[label];}
+
+function wasteBadge(pct, wAbs){
+  var p=(pct*100).toFixed(1)+'%';
+  var mm=wAbs>0?' · '+fmtN(Math.round(wAbs))+' mm':'';
+  if(pct<=0.10)return '<span class="badge bg-ok">'+p+mm+'</span>';
+  if(pct<=0.25)return '<span class="badge bg-wa">'+p+mm+'</span>';
+  return '<span class="badge bg-er">'+p+mm+'</span>';
+}
+function effClass(pct){return pct>=0.9?'ok':pct>=0.75?'wa':'er';}
+
+/* ── Render standard results ── */
+function renderResults(allResults, bodyId, isOpt){
+  var body=document.getElementById(bodyId);
+  body.innerHTML='';
+  var gtBars=0,gtUsable=0,gtUsed=0;
+  allResults.forEach(function(r){gtBars+=r.bars.length;r.bars.forEach(function(b){gtUsable+=b.barLen-2*END_TRIM;gtUsed+=b.used;});});
+  var gtEff=gtUsable>0?gtUsed/gtUsable:0;
+  var gtWaste=gtUsable-gtUsed;
+
+  var sd=document.createElement('div');sd.className='stats';
+  sd.innerHTML='<div class="scard"><div class="v">'+gtBars+'</div><div class="l">เส้นรวม</div></div>'
+    +'<div class="scard '+effClass(gtEff)+'"><div class="v">'+(gtEff*100).toFixed(1)+'%</div><div class="l">ประสิทธิภาพรวม</div></div>'
+    +'<div class="scard"><div class="v">'+fmtN(gtWaste)+'</div><div class="l">เศษรวม (mm)</div></div>'
+    +'<div class="scard"><div class="v">'+allResults.length+'</div><div class="l">โปรไฟล์</div></div>';
+  body.appendChild(sd);
+
+  var sw=document.createElement('div');sw.style.cssText='margin-bottom:18px;overflow-x:auto';
+  var sh=document.createElement('div');sh.style.cssText='font-weight:600;font-size:13px;color:var(--primary);margin-bottom:8px';sh.textContent='สรุปจำนวนเส้น';sw.appendChild(sh);
+  var tbl=document.createElement('table');tbl.style.cssText='width:100%;border-collapse:collapse;font-size:13px';
+  var ths='background:var(--primary);color:#fff;padding:8px 12px;font-weight:600;white-space:nowrap;text-align:';
+  tbl.innerHTML='<thead><tr>'+'<th style="'+ths+'left">โปรไฟล์</th>'+'<th style="'+ths+'right">ขนาดเส้น</th>'+'<th style="'+ths+'right">Kerf</th>'+'<th style="'+ths+'right">จำนวนเส้น</th>'+'<th style="'+ths+'right">เศษรวม (mm)</th>'+'<th style="'+ths+'right">ประสิทธิภาพ</th>'+'</tr></thead>';
+  var tb2=document.createElement('tbody');
+  allResults.forEach(function(r,i){
+    var tw=r.bars.reduce(function(s,b){return s+(b.barLen-b.used);},0);
+    var tl=r.bars.reduce(function(s,b){return s+b.barLen;},0);
+    var eff=tl>0?1-tw/tl:0;
+    var td='padding:7px 12px;border-bottom:1px solid #e8eef5',tdR=td+';text-align:right';
+    var barsByLen={};
+    r.bars.forEach(function(b){if(!barsByLen[b.barLen])barsByLen[b.barLen]=[];barsByLen[b.barLen].push(b);});
+    var lenKeys=Object.keys(barsByLen).map(Number).sort(function(a,b){return b-a;});
+    lenKeys.forEach(function(len,li){
+      var bfl=barsByLen[len];
+      var lw=bfl.reduce(function(s,b){return s+(b.barLen-b.used);},0);
+      var ll=bfl.reduce(function(s,b){return s+b.barLen;},0);
+      var le=ll>0?1-lw/ll:0;
+      var lec=le>=0.9?'var(--ok)':le>=0.75?'var(--warn)':'var(--err)';
+      var bg=((i*10+li)%2===0)?'#f8fafc':'#fff';
+      var tr2=document.createElement('tr');tr2.style.background=bg;
+      tr2.innerHTML=
+        '<td style="'+td+';font-weight:600">'+escH(r.prof.name)+'</td>'
+        +'<td style="'+tdR+'">'+fmtN(len)+' mm</td>'
+        +'<td style="'+tdR+'">'+r.prof.kerf+' mm</td>'
+        +'<td style="'+tdR+';font-weight:700;color:var(--primary)">'+bfl.length+' เส้น</td>'
+        +'<td style="'+tdR+'">'+fmtN(lw)+'</td>'
+        +'<td style="'+tdR+';font-weight:600;color:'+lec+'">'+(le*100).toFixed(1)+'%</td>';
+      tb2.appendChild(tr2);
+    });
+    if(lenKeys.length>1){
+      var ec=eff>=0.9?'var(--ok)':eff>=0.75?'var(--warn)':'var(--err)';
+      var st='padding:5px 12px;border-bottom:2px solid #c8d8ee;background:#eef4fb;font-style:italic';
+      var sr=document.createElement('tr');
+      sr.innerHTML=
+        '<td style="'+st+';color:var(--primary-l);padding-left:22px">↳ รวม '+escH(r.prof.name)+'</td>'
+        +'<td style="'+st+';text-align:right">'+lenKeys.map(function(l){return fmtN(l);}).join(' + ')+' mm</td>'
+        +'<td style="'+st+';text-align:right">'+r.prof.kerf+' mm</td>'
+        +'<td style="'+st+';text-align:right;font-weight:700;color:var(--primary)">'+r.bars.length+' เส้น</td>'
+        +'<td style="'+st+';text-align:right">'+fmtN(tw)+'</td>'
+        +'<td style="'+st+';text-align:right;font-weight:600;color:'+ec+'">'+(eff*100).toFixed(1)+'%</td>';
+      tb2.appendChild(sr);
+    }
+  });
+  var totTd='padding:8px 12px;border-top:2px solid var(--primary);font-weight:700;background:#e8f0fb',totTdR=totTd+';text-align:right';
+  var gtEc=gtEff>=0.9?'var(--ok)':gtEff>=0.75?'var(--warn)':'var(--err)';
+  var totR=document.createElement('tr');
+  totR.innerHTML='<td style="'+totTd+'">รวมทั้งหมด</td>'+'<td style="'+totTdR+'">—</td>'+'<td style="'+totTdR+'">—</td>'+'<td style="'+totTdR+';color:var(--primary)">'+gtBars+' เส้น</td>'+'<td style="'+totTdR+'">'+fmtN(gtWaste)+'</td>'+'<td style="'+totTdR+';color:'+gtEc+'">'+(gtEff*100).toFixed(1)+'%</td>';
+  tb2.appendChild(totR);tbl.appendChild(tb2);sw.appendChild(tbl);body.appendChild(sw);
+
+  // Auto Optimizer baseline: show summary only, no cutting-plan detail.
+  if(bodyId==='resultsBody_3'){
+    return;
+  }
+
+  var sep=document.createElement('div');sep.className='sep';body.appendChild(sep);
+  var dh=document.createElement('div');dh.style.cssText='font-weight:600;font-size:13px;color:var(--primary);margin-bottom:12px';dh.textContent='รายละเอียดแผนตัด';body.appendChild(dh);
+
+  allResults.forEach(function(r,ri){
+    var multiLen=r.barLens.length>1;
+    var totalUsable=r.bars.reduce(function(s,b){return s+(b.barLen-2*END_TRIM);},0);
+    var totalUsed=r.bars.reduce(function(s,b){return s+b.used;},0);
+    var totalWaste=totalUsable-totalUsed;
+    var eff=totalUsable>0?totalUsed/totalUsable:0;
+    var sec=document.createElement('div');sec.className='psec';
+    var kerfInfo=r.prof.kerf>0?' | Kerf '+r.prof.kerf+' mm':'';
+    var lensLabel=r.barLens.map(function(l){return fmtN(l);}).join(' / ')+' mm';
+    sec.innerHTML='<div class="psec-head"><span>'+escH(r.prof.name)+' — '+lensLabel+kerfInfo+'</span><span style="background:rgba(255,255,255,.2);border-radius:12px;padding:2px 10px;font-size:11px">'+r.bars.length+' เส้น | '+(eff*100).toFixed(1)+'%</span></div><div class="psec-body" id="psec'+(isOpt?'o':'')+''+ri+'"></div>';
+    body.appendChild(sec);
+    var pb=document.getElementById('psec'+(isOpt?'o':'')+''+ri);
+    if(r.oversized&&r.oversized.length){var wb=document.createElement('div');wb.className='warn-box';wb.textContent='⚠ ชิ้นงานต่อไปนี้ใหญ่เกินขนาดเส้น: '+r.oversized.map(function(o){return (o.label||'?')+' '+fmtN(o.size)+' mm';}).join(', ');pb.appendChild(wb);}
+    var ps=document.createElement('div');ps.className='stats';
+    ps.innerHTML='<div class="scard"><div class="v">'+r.bars.length+'</div><div class="l">จำนวนเส้น</div></div>'+'<div class="scard '+effClass(eff)+'"><div class="v">'+(eff*100).toFixed(1)+'%</div><div class="l">ประสิทธิภาพ</div></div>'+'<div class="scard"><div class="v">'+fmtN(totalWaste)+'</div><div class="l">เศษรวม (mm)</div></div>'+'<div class="scard"><div class="v">'+fmtN(Math.round(totalWaste/Math.max(r.bars.length,1)))+'</div><div class="l">เศษเฉลี่ย/เส้น</div></div>';
+    pb.appendChild(ps);
+
+    function barKey(bar){return bar.barLen+'|'+bar.pieces.map(function(p){return p.size;}).slice().sort(function(a,b){return b-a;}).join(',');}
+    var groups=[],keyIdx={};
+    r.bars.forEach(function(bar){var k=barKey(bar);if(keyIdx[k]!==undefined){groups[keyIdx[k]].count++;}else{keyIdx[k]=groups.length;groups.push({bar:bar,count:1,startBar:0});}});
+    var cursor=1;groups.forEach(function(g){g.startBar=cursor;cursor+=g.count;});
+    groups.forEach(function(grp){
+      var bar=grp.bar,count=grp.count,startBar=grp.startBar;
+      var usable=bar.barLen-2*END_TRIM,waste=usable-bar.used,pct=waste/usable;
+      var g=document.createElement('div');g.className='bgroup';
+      var lbl=document.createElement('div');lbl.className='blabel';
+      var rangeLabel=count>1?('เส้นที่ '+startBar+'–'+(startBar+count-1)+' <span style="background:var(--primary-l);color:#fff;border-radius:10px;padding:1px 8px;font-size:10px;margin-left:4px">×'+count+' เส้น</span>'):('เส้นที่ '+startBar);
+      var lenTag=multiLen?' <span style="background:#e8f0fb;color:var(--primary);border-radius:8px;padding:1px 7px;font-size:10px">'+fmtN(bar.barLen)+' mm</span>':'';
+      lbl.innerHTML='<span>'+rangeLabel+lenTag+'</span>'+'<span class="num">'+fmtN(bar.used)+'/'+fmtN(usable)+' mm — เศษ '+wasteBadge(pct,waste)+'</span>';
+      g.appendChild(lbl);
+      var track=document.createElement('div');track.className='btrack';
+      // Trim head
+      var trimH=document.createElement('div');trimH.className='btrim';
+      trimH.style.width=(END_TRIM/bar.barLen*100).toFixed(3)+'%';
+      trimH.innerHTML='<div class="tt">ตัดทิ้งหัว '+END_TRIM+' mm</div>';
+      if(END_TRIM/bar.barLen>=0.025)trimH.textContent='trim';
+      track.appendChild(trimH);
+      bar.pieces.forEach(function(piece){
+        var seg=document.createElement('div');seg.className='bseg';
+        seg.style.cssText='width:'+(piece.size/bar.barLen*100).toFixed(3)+'%;background:'+pieceColor(piece.label||String(piece.size))+';min-width:2px';
+        seg.innerHTML=(piece.size>=bar.barLen*0.08?(fmtN(piece.size)+(piece.label?' - '+piece.label:'')):'')+' <div class="tt">'+(piece.label||'—')+' '+fmtN(piece.size)+' mm</div>';
+        track.appendChild(seg);
+      });
+      if(waste>0){var ww=document.createElement('div');ww.className='bwaste';ww.style.width=(waste/bar.barLen*100).toFixed(3)+'%';if(waste>=bar.barLen*0.05)ww.textContent=fmtN(waste);track.appendChild(ww);}
+      // Trim tail
+      var trimT=document.createElement('div');trimT.className='btrim';
+      trimT.style.width=(END_TRIM/bar.barLen*100).toFixed(3)+'%';
+      trimT.innerHTML='<div class="tt">ตัดทิ้งท้าย '+END_TRIM+' mm</div>';
+      if(END_TRIM/bar.barLen>=0.025)trimT.textContent='trim';
+      track.appendChild(trimT);
+      g.appendChild(track);pb.appendChild(g);
+    });
+
+    var usedLabels={};r.bars.forEach(function(b){b.pieces.forEach(function(p){usedLabels[p.label||'?']=true;});});
+    var lbls=Object.keys(usedLabels);
+    if(lbls.length<=20){var leg=document.createElement('div');leg.style.cssText='display:flex;flex-wrap:wrap;gap:6px;margin-top:10px';lbls.forEach(function(lbl){var c=pieceColor(lbl);var span=document.createElement('span');span.style.cssText='display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted)';span.innerHTML='<span style="width:12px;height:12px;border-radius:2px;background:'+c+';display:inline-block"></span>'+escH(lbl);leg.appendChild(span);});pb.appendChild(leg);}
+  });
+}
+
+/* ── Render optimized results ── */
+function renderOptResults(optResults){
+  var body=document.getElementById('optBody');
+  body.innerHTML='';
+
+  var gtBars=0,gtUsable=0,gtUsed=0;
+  optResults.forEach(function(r){gtBars+=r.bars.length;r.bars.forEach(function(b){gtUsable+=b.barLen-2*END_TRIM;gtUsed+=b.used;});});
+  var gtEff=gtUsable>0?gtUsed/gtUsable:0;
+  var gtWaste=gtUsable-gtUsed;
+
+  var sd=document.createElement('div');sd.className='stats';
+  sd.innerHTML='<div class="scard"><div class="v">'+gtBars+'</div><div class="l">เส้นรวม</div></div>'
+    +'<div class="scard '+effClass(gtEff)+'"><div class="v">'+(gtEff*100).toFixed(1)+'%</div><div class="l">ประสิทธิภาพรวม</div></div>'
+    +'<div class="scard"><div class="v">'+fmtN(gtWaste)+'</div><div class="l">เศษรวม (mm)</div></div>';
+  var gtLoss=(1-gtEff)*100;
+  if(gtEff>=0.985){
+    var tick=document.createElement('div');tick.className='scard ok';
+    tick.innerHTML='<div class="v">✓</div><div class="l">Loss &lt; 1.5%</div>';sd.appendChild(tick);
+  }else if(gtEff>=0.97){
+    var tick=document.createElement('div');tick.className='scard wa';
+    tick.innerHTML='<div class="v">'+gtLoss.toFixed(1)+'%</div><div class="l">Loss (เป้า &lt;1.5%)</div>';sd.appendChild(tick);
+  }else{
+    var tick=document.createElement('div');tick.className='scard er';
+    tick.innerHTML='<div class="v">'+gtLoss.toFixed(1)+'%</div><div class="l">Loss (เป้า &lt;1.5%)</div>';sd.appendChild(tick);
+  }
+  body.appendChild(sd);
+
+  /* ── Warning: target not reached ── */
+  var allReached=optResults.every(function(r){return r.targetReached;});
+  if(!allReached){
+    var wb=document.createElement('div');
+    wb.style.cssText='background:#fff3cd;border:2px solid #f0ad4e;border-radius:8px;padding:14px 16px;margin-bottom:14px';
+    var wlines=['<div style="font-weight:700;font-size:14px;color:#7a5c0a;margin-bottom:8px">⚠️ ไม่สามารถบรรลุ Loss &lt; 1.5% ด้วย ≤ 5 ขนาด</div>'];
+    optResults.forEach(function(r){
+      if(r.targetReached)return;
+      var loss=((1-r.eff)*100).toFixed(2);
+      var lensStr=(r.barLens||[]).map(function(l){return fmtN(l);}).join(', ')+' mm';
+      var nLen=(r.barLens||[]).length;
+      wlines.push('<div style="font-size:13px;color:#5a4010;margin-top:6px">'
+        +'<b>'+escH(r.prof.name)+'</b> — ผลดีที่สุดที่ทำได้: <b>Loss '+loss+'%</b>'
+        +' (Eff '+(r.eff*100).toFixed(2)+'%) ใช้ <b>'+nLen+' ขนาด</b>: '+escH(lensStr)
+        +'</div>');
+      wlines.push('<div style="font-size:12px;color:#7a5c0a;margin-top:3px;margin-left:12px">'
+        +'💡 ลองตรวจสอบขนาดชิ้นงาน — ชิ้นที่มีขนาดเฉพาะ (prime sizes) อาจทำให้ loss สูง'
+        +'</div>');
+    });
+    wb.innerHTML=wlines.join('');
+    body.appendChild(wb);
+  }
+
+  var osw=document.createElement('div');osw.style.cssText='margin-bottom:18px;overflow-x:auto';
+  var osh=document.createElement('div');osh.style.cssText='font-weight:600;font-size:13px;color:var(--ok);margin-bottom:8px';osh.textContent='สรุปจำนวนเส้น (Optimized)';osw.appendChild(osh);
+  var otbl=document.createElement('table');otbl.style.cssText='width:100%;border-collapse:collapse;font-size:13px';
+  var oths='background:var(--ok);color:#fff;padding:8px 12px;font-weight:600;white-space:nowrap;text-align:';
+  otbl.innerHTML='<thead><tr>'+'<th style="'+oths+'left">โปรไฟล์</th>'+'<th style="'+oths+'right">ขนาดเส้น</th>'+'<th style="'+oths+'right">Kerf</th>'+'<th style="'+oths+'right">จำนวนเส้น</th>'+'<th style="'+oths+'right">เศษรวม (mm)</th>'+'<th style="'+oths+'right">ประสิทธิภาพ</th>'+'</tr></thead>';
+  var otb2=document.createElement('tbody');
+  optResults.forEach(function(r,i){
+    var tw=r.bars.reduce(function(s,b){return s+(b.barLen-b.used);},0);
+    var tl=r.bars.reduce(function(s,b){return s+b.barLen;},0);
+    var eff=tl>0?1-tw/tl:0;
+    var otd='padding:7px 12px;border-bottom:1px solid #d0ead8',otdR=otd+';text-align:right';
+    var barsByLen={};
+    r.bars.forEach(function(b){if(!barsByLen[b.barLen])barsByLen[b.barLen]=[];barsByLen[b.barLen].push(b);});
+    var lenKeys=Object.keys(barsByLen).map(Number).sort(function(a,b){return b-a;});
+    lenKeys.forEach(function(len,li){
+      var bfl=barsByLen[len];
+      var lw=bfl.reduce(function(s,b){return s+(b.barLen-b.used);},0);
+      var ll=bfl.reduce(function(s,b){return s+b.barLen;},0);
+      var le=ll>0?1-lw/ll:0;
+      var lec=le>=0.9?'var(--ok)':le>=0.75?'var(--warn)':'var(--err)';
+      var bg=((i*10+li)%2===0)?'#f0f9f4':'#fff';
+      var otr=document.createElement('tr');otr.style.background=bg;
+      otr.innerHTML=
+        '<td style="'+otd+';font-weight:600">'+escH(r.prof.name)+'</td>'
+        +'<td style="'+otdR+'">'+fmtN(len)+' mm</td>'
+        +'<td style="'+otdR+'">'+r.kerf+' mm</td>'
+        +'<td style="'+otdR+';font-weight:700;color:var(--ok)">'+bfl.length+' เส้น</td>'
+        +'<td style="'+otdR+'">'+fmtN(lw)+'</td>'
+        +'<td style="'+otdR+';font-weight:600;color:'+lec+'">'+(le*100).toFixed(1)+'%</td>';
+      otb2.appendChild(otr);
+    });
+    if(lenKeys.length>1){
+      var oec=eff>=0.9?'var(--ok)':eff>=0.75?'var(--warn)':'var(--err)';
+      var ost='padding:5px 12px;border-bottom:2px solid #a8d5b5;background:#e0f3e8;font-style:italic';
+      var osr=document.createElement('tr');
+      osr.innerHTML=
+        '<td style="'+ost+';color:var(--ok);padding-left:22px">↳ รวม '+escH(r.prof.name)+'</td>'
+        +'<td style="'+ost+';text-align:right">'+lenKeys.map(function(l){return fmtN(l);}).join(' + ')+' mm</td>'
+        +'<td style="'+ost+';text-align:right">'+r.kerf+' mm</td>'
+        +'<td style="'+ost+';text-align:right;font-weight:700;color:var(--ok)">'+r.bars.length+' เส้น</td>'
+        +'<td style="'+ost+';text-align:right">'+fmtN(tw)+'</td>'
+        +'<td style="'+ost+';text-align:right;font-weight:600;color:'+oec+'">'+(eff*100).toFixed(1)+'%</td>';
+      otb2.appendChild(osr);
+    }
+  });
+  var ogtTd='padding:8px 12px;border-top:2px solid var(--ok);font-weight:700;background:#c8ecd5',ogtTdR=ogtTd+';text-align:right';
+  var ogtEc=gtEff>=0.9?'var(--ok)':gtEff>=0.75?'var(--warn)':'var(--err)';
+  var ogtR=document.createElement('tr');
+  ogtR.innerHTML='<td style="'+ogtTd+'">รวมทั้งหมด</td>'+'<td style="'+ogtTdR+'">—</td>'+'<td style="'+ogtTdR+'">—</td>'+'<td style="'+ogtTdR+';color:var(--ok)">'+gtBars+' เส้น</td>'+'<td style="'+ogtTdR+'">'+fmtN(gtWaste)+'</td>'+'<td style="'+ogtTdR+';color:'+ogtEc+'">'+(gtEff*100).toFixed(1)+'%</td>';
+  otb2.appendChild(ogtR);otbl.appendChild(otb2);osw.appendChild(otbl);body.appendChild(osw);
+
+  var osep=document.createElement('div');osep.className='sep';body.appendChild(osep);
+
+  optResults.forEach(function(r,ri){
+    var rLoss=((1-r.eff)*100).toFixed(2);
+    var rLossColor=r.eff>=0.985?'var(--ok)':r.eff>=0.97?'var(--warn)':'var(--err)';
+    var reachedBadge=r.targetReached
+      ?'<span style="background:var(--ok-bg);color:var(--ok);border-radius:12px;padding:2px 10px;font-size:11px;font-weight:600;margin-left:8px">✓ Loss &lt; 1.5%</span>'
+      :'<span style="background:var(--warn-bg);color:var(--warn);border-radius:12px;padding:2px 10px;font-size:11px;font-weight:600;margin-left:8px">⚠ Loss '+rLoss+'% (ไม่ถึงเป้า)</span>';
+    var levelBadge=r.levelAchieved
+      ?'<span style="background:#e8f0fb;color:var(--primary);border-radius:12px;padding:2px 10px;font-size:11px;margin-left:6px">พบที่ Level '+r.levelAchieved+' ('+((r.barLens||[]).length)+' ขนาด)</span>'
+      :'<span style="background:#f0f0f0;color:var(--muted);border-radius:12px;padding:2px 10px;font-size:11px;margin-left:6px">ดีที่สุดด้วย '+((r.barLens||[]).length)+' ขนาด</span>';
+    var ec=document.createElement('div');ec.className='eff-compare';
+    ec.innerHTML='<div class="ec-item ec-before"><div class="ec-v" style="color:var(--warn)">'+(r.stdEff*100).toFixed(1)+'%</div><div class="ec-l">ก่อน Optimize (Profile)</div></div>'
+      +'<div style="display:flex;align-items:center;font-size:20px;color:var(--muted)">→</div>'
+      +'<div class="ec-item ec-after"><div class="ec-v" style="color:'+rLossColor+'">'+(r.eff*100).toFixed(1)+'%</div><div class="ec-l">หลัง Optimize'+reachedBadge+'</div></div>'
+      +'<div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;padding:4px 0">'+levelBadge+'</div>';
+
+    var barCount={};r.bars.forEach(function(b){barCount[b.barLen]=(barCount[b.barLen]||0)+1;});
+    var shopTitle=document.createElement('div');shopTitle.style.cssText='font-weight:600;font-size:12px;color:var(--ok);margin-top:10px;margin-bottom:4px';shopTitle.textContent='🛒 รายการสั่งซื้อเส้น — '+escH(r.prof.name);
+    var shopList=document.createElement('div');shopList.className='shop-list';
+    Object.keys(barCount).sort(function(a,b){return b-a;}).forEach(function(len){
+      var item=document.createElement('div');item.className='shop-item';
+      item.innerHTML='<div class="sv">'+barCount[len]+' เส้น</div><div class="sl">ยาว '+fmtN(Number(len))+' mm</div>';
+      shopList.appendChild(item);
+    });
+    var totalBars=r.bars.length;
+    var totalItem=document.createElement('div');totalItem.className='shop-item';totalItem.style.cssText='background:#e8f0fb;border-color:var(--primary-l)';
+    totalItem.innerHTML='<div class="sv" style="color:var(--primary)">'+totalBars+'</div><div class="sl">รวมทั้งหมด</div>';
+    shopList.appendChild(totalItem);
+
+    var sec=document.createElement('div');sec.className='psec';sec.style.border='1px solid var(--ok)';
+    var lensStr=(r.barLens||[]).map(function(l){return fmtN(l);}).join(', ')+' mm';
+    sec.innerHTML='<div class="psec-head" style="background:var(--ok)"><span>'+escH(r.prof.name)+' — ใช้เส้น: '+lensStr+'</span><span style="background:rgba(255,255,255,.2);border-radius:12px;padding:2px 10px;font-size:11px">'+r.bars.length+' เส้น | '+(r.eff*100).toFixed(1)+'%</span></div><div class="psec-body" id="pseco'+ri+'"></div>';
+    body.appendChild(sec);
+    var pb=document.getElementById('pseco'+ri);
+    pb.appendChild(ec);pb.appendChild(shopTitle);pb.appendChild(shopList);
+
+    var sep2=document.createElement('div');sep2.className='sep';pb.appendChild(sep2);
+    renderBarsOnly(r.bars, r.barLens||[], r.kerf, pb, 'psecoo'+ri);
+  });
+}
+
+function renderBarsOnly(bars, barLens, kerf, pb, prefix){
+  var multiLen=barLens.length>1;
+  function barKey(bar){return bar.barLen+'|'+bar.pieces.map(function(p){return p.size;}).slice().sort(function(a,b){return b-a;}).join(',');}
+  var groups=[],keyIdx={};
+  bars.forEach(function(bar){var k=barKey(bar);if(keyIdx[k]!==undefined){groups[keyIdx[k]].count++;}else{keyIdx[k]=groups.length;groups.push({bar:bar,count:1,startBar:0});}});
+  var cursor=1;groups.forEach(function(g){g.startBar=cursor;cursor+=g.count;});
+  groups.forEach(function(grp){
+    var bar=grp.bar,count=grp.count,startBar=grp.startBar;
+    var usable=bar.barLen-2*END_TRIM,waste=usable-bar.used,pct=waste/usable;
+    var g=document.createElement('div');g.className='bgroup';
+    var lbl=document.createElement('div');lbl.className='blabel';
+    var rangeLabel=count>1?('เส้นที่ '+startBar+'–'+(startBar+count-1)+' <span style="background:var(--ok);color:#fff;border-radius:10px;padding:1px 8px;font-size:10px;margin-left:4px">×'+count+' เส้น</span>'):('เส้นที่ '+startBar);
+    var lenTag=multiLen?' <span style="background:#e8f4ec;color:var(--ok);border-radius:8px;padding:1px 7px;font-size:10px">'+fmtN(bar.barLen)+' mm</span>':'';
+    lbl.innerHTML='<span>'+rangeLabel+lenTag+'</span>'+'<span class="num">'+fmtN(bar.used)+'/'+fmtN(usable)+' mm — เศษ '+wasteBadge(pct,waste)+'</span>';
+    g.appendChild(lbl);
+    var track=document.createElement('div');track.className='btrack';
+    // Trim head
+    var trimH=document.createElement('div');trimH.className='btrim';
+    trimH.style.width=(END_TRIM/bar.barLen*100).toFixed(3)+'%';
+    trimH.innerHTML='<div class="tt">ตัดทิ้งหัว '+END_TRIM+' mm</div>';
+    if(END_TRIM/bar.barLen>=0.025)trimH.textContent='trim';
+    track.appendChild(trimH);
+    bar.pieces.forEach(function(piece){
+      var seg=document.createElement('div');seg.className='bseg';
+      seg.style.cssText='width:'+(piece.size/bar.barLen*100).toFixed(3)+'%;background:'+pieceColor(piece.label||String(piece.size))+';min-width:2px';
+      seg.innerHTML=(piece.size>=bar.barLen*0.08?(fmtN(piece.size)+(piece.label?' - '+piece.label:'')):'')+' <div class="tt">'+(piece.label||'—')+' '+fmtN(piece.size)+' mm</div>';
+      track.appendChild(seg);
+    });
+    if(waste>0){var ww=document.createElement('div');ww.className='bwaste';ww.style.width=(waste/bar.barLen*100).toFixed(3)+'%';if(waste>=bar.barLen*0.05)ww.textContent=fmtN(waste);track.appendChild(ww);}
+    // Trim tail
+    var trimT=document.createElement('div');trimT.className='btrim';
+    trimT.style.width=(END_TRIM/bar.barLen*100).toFixed(3)+'%';
+    trimT.innerHTML='<div class="tt">ตัดทิ้งท้าย '+END_TRIM+' mm</div>';
+    if(END_TRIM/bar.barLen>=0.025)trimT.textContent='trim';
+    track.appendChild(trimT);
+    g.appendChild(track);pb.appendChild(g);
+  });
+}
+
+/* ═══════════════════════════════════════
+   IMPORT EXCEL
+═══════════════════════════════════════ */
+function cellStr(cell){if(!cell)return '';var v=cell.value;if(v==null)return '';if(typeof v==='string')return v;if(typeof v==='number'||typeof v==='boolean')return String(v);if(v&&Array.isArray(v.richText))return v.richText.map(function(r){return r.text||'';}).join('');if(v&&typeof v.text==='string')return v.text;if(v&&v.result!=null)return String(v.result);return String(v);}
+function cellNum(cell){return parseFloat(cellStr(cell).replace(/,/g,'').trim());}
+async function importExcel(event){
+  var file=event.target.files[0];if(!file)return;event.target.value='';
+  if(typeof ExcelJS==='undefined'){alert('ไม่สามารถโหลด ExcelJS ได้');return;}
+  try{
+    var buf=await file.arrayBuffer();var wb2=new ExcelJS.Workbook();await wb2.xlsx.load(buf);
+    var ws=wb2.worksheets[0];if(!ws){alert('ไม่พบ sheet');return;}
+    var headerRowNum=-1;var colMap={label:-1,profile:-1,size:-1,qty:-1};
+    ws.eachRow(function(row,rn){
+      if(headerRowNum>0)return;var found=0;
+      for(var ci=1;ci<=Math.max(row.cellCount,10);ci++){
+        var v=cellStr(row.getCell(ci)).trim();
+        if(['ชุด','ชื่อ','รหัส','label','Label'].indexOf(v)>=0){colMap.label=ci;found++;}
+        else if(['Profile','โปรไฟล์','profile','PROFILE'].indexOf(v)>=0){colMap.profile=ci;found++;}
+        else if(['ขนาด','size','Size','SIZE','ความยาว'].indexOf(v)>=0){colMap.size=ci;found++;}
+        else if(['จำนวน','qty','Qty','QTY','จน.'].indexOf(v)>=0){colMap.qty=ci;found++;}
+      }
+      if(found>=2)headerRowNum=rn;
+    });
+    if(headerRowNum<0){colMap.label=1;colMap.profile=2;colMap.size=3;colMap.qty=4;headerRowNum=0;}
+    if(colMap.label<1)colMap.label=1;if(colMap.profile<1)colMap.profile=2;if(colMap.size<1)colMap.size=3;if(colMap.qty<1)colMap.qty=4;
+    var added=0,skipped=0;
+    ws.eachRow(function(row,rn){
+      if(rn<=headerRowNum)return;
+      var size=cellNum(row.getCell(colMap.size));var qty=cellNum(row.getCell(colMap.qty));
+      if(!size||isNaN(size)||size<=0){skipped++;return;}
+      var q=isNaN(qty)||qty<=0?1:Math.round(qty);
+      var label=cellStr(row.getCell(colMap.label)).trim();
+      var profName=cellStr(row.getCell(colMap.profile)).trim();
+      var prof=profiles.find(function(p){return p.name===profName&&profName!=='';});
+      if(!prof&&profName){prof=addProfileData(profName,'6400',2);updatePieceDropdowns();}
+      if(!prof)prof=profiles[0];
+      addRow(prof?prof.id:profiles[0].id,label,size,q);added++;
+    });
+    updateSummary();
+    var msg='นำเข้าสำเร็จ '+added+' รายการ';if(skipped)msg+=' (ข้าม '+skipped+' แถว)';alert(msg);
+  }catch(err){alert('เกิดข้อผิดพลาด: '+err.message);console.error(err);}
+}
+
+/* ═══════════════════════════════════════
+   IMPORT FROM PROFILE PROCESSOR
+═══════════════════════════════════════ */
+async function importProfileProcessor(event){
+  var file=event.target.files[0];if(!file)return;event.target.value='';
+  if(typeof ExcelJS==='undefined'){alert('ไม่สามารถโหลด ExcelJS ได้');return;}
+  try{
+    var buf=await file.arrayBuffer();var wb2=new ExcelJS.Workbook();await wb2.xlsx.load(buf);
+    var ws=null;
+    wb2.worksheets.forEach(function(s){if(s.name==='สรุปรายการ')ws=s;});
+    if(!ws){alert('ไม่พบ sheet "สรุปรายการ" ในไฟล์นี้');return;}
+    var headerRowNum=-1;
+    var colLabel=-1,colProfile=-1,colSize=-1,colQty=-1;
+    ws.eachRow(function(row,rn){
+      if(headerRowNum>0)return;
+      var found=0;
+      for(var ci=1;ci<=Math.max(row.cellCount,10);ci++){
+        var v=cellStr(row.getCell(ci)).trim();
+        if(v==='ชื่อรหัส'){colLabel=ci;found++;}
+        else if(v==='Profile'){colProfile=ci;found++;}
+        else if(v==='ขนาด (mm)'||v==='ขนาด'){colSize=ci;found++;}
+        else if(v==='จำนวน (ชิ้น)'||v==='จำนวน'){colQty=ci;found++;}
+      }
+      if(found>=3)headerRowNum=rn;
+    });
+    if(headerRowNum<0){alert('ไม่พบ header row ใน sheet "สรุปรายการ"\nกรุณาตรวจสอบว่าไฟล์มีคอลัมน์: ชื่อรหัส, Profile, ขนาด (mm), จำนวน (ชิ้น)');return;}
+    var added=0,skipped=0;
+    ws.eachRow(function(row,rn){
+      if(rn<=headerRowNum)return;
+      var size=cellNum(row.getCell(colSize));
+      var qty=cellNum(row.getCell(colQty));
+      if(!size||isNaN(size)||size<=0){skipped++;return;}
+      var q=isNaN(qty)||qty<=0?1:Math.round(qty);
+      var label=cellStr(row.getCell(colLabel)).trim();
+      var profName=cellStr(row.getCell(colProfile)).trim();
+      if(!profName&&!label){skipped++;return;}
+      var prof=profiles.find(function(p){return p.name===profName&&profName!=='';});
+      if(!prof&&profName){prof=addProfileData(profName,'6400',2);updatePieceDropdowns();}
+      if(!prof)prof=profiles[0];
+      addRow(prof?prof.id:profiles[0].id,label,size,q);added++;
+    });
+    updateSummary();
+    var msg='นำเข้าจาก Profile Processor สำเร็จ '+added+' รายการ';
+    if(skipped)msg+=' (ข้าม '+skipped+' แถว)';
+    alert(msg);
+  }catch(err){alert('เกิดข้อผิดพลาด: '+err.message);console.error(err);}
+}
+
+/* ═══════════════════════════════════════
+   EXPORT EXCEL
+═══════════════════════════════════════ */
+async function exportExcel(){await doExport(lastResult,'แผนตัด advance.xlsx');}
+async function exportOptExcel(){await doExport(lastOptResult?lastOptResult.map(function(r){return{prof:r.prof,barLens:r.barLens||[],bars:r.bars,oversized:r.oversized||[]};}):[lastResult],'แผนตัด advance-optimized.xlsx');}
+
+async function doExport(allResults,filename){
+  var validPieces=pieces.filter(function(p){return p.size>0&&p.qty>0;});
+  if(!validPieces.length){alert('กรุณาเพิ่มรายการชิ้นงานก่อน');return;}
+  if(typeof ExcelJS==='undefined'){alert('ไม่สามารถโหลด ExcelJS ได้');return;}
+  var wb=new ExcelJS.Workbook();wb.creator='Aluminum Cutting Optimizer';wb.created=new Date();
+  var FONT='TH SarabunPSK',SZ=14,tbk={style:'thin',color:{argb:'FF000000'}};
+
+  /* ── Sheet 1: สรุปสั่งซื้อ ── */
+  if(allResults&&allResults.length){
+    var wsum=wb.addWorksheet('📋 สรุปสั่งซื้อ');
+    wsum.columns=[{key:'a',width:22},{key:'b',width:16},{key:'c',width:12},{key:'d',width:16},{key:'e',width:14},{key:'f',width:14}];
+    var sh=wsum.addRow(['Profile','ขนาดเส้น (mm)','จำนวนเส้น','ความยาวรวม (m)','เศษรวม (mm)','ประสิทธิภาพ']);sh.height=24;
+    sh.eachCell(function(cell){cell.font={name:FONT,size:SZ,bold:true,color:{argb:'FFFFFFFF'}};cell.alignment={horizontal:'center',vertical:'middle'};cell.border=tbk;cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF1F4E79'}};});
+    var grandCnt=0,grandLen=0,grandWaste=0;
+    allResults.forEach(function(r,ri){
+      var byLen={};
+      r.bars.forEach(function(b){if(!byLen[b.barLen])byLen[b.barLen]=[];byLen[b.barLen].push(b);});
+      var lenKeys=Object.keys(byLen).map(Number).sort(function(a,b){return b-a;});
+      var rowBg=ri%2===0?'FFDEEAF1':'FFEFF7FB';
+      lenKeys.forEach(function(len,li){
+        var bfl=byLen[len];
+        var cnt=bfl.length;
+        var totalLen=cnt*len;
+        var totalWaste=bfl.reduce(function(s,b){return s+(b.barLen-b.used);},0);
+        var eff=totalLen>0?(1-totalWaste/totalLen)*100:0;
+        grandCnt+=cnt;grandLen+=totalLen;grandWaste+=totalWaste;
+        var row=wsum.addRow([li===0?r.prof.name:'',len,cnt,totalLen/1000,totalWaste,eff.toFixed(1)+'%']);row.height=20;
+        row.eachCell(function(cell,cn){cell.font={name:FONT,size:SZ};cell.alignment={horizontal:cn>=2?'right':'left',vertical:'middle'};cell.border=tbk;cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:rowBg}};if(cn===4)cell.numFmt='#,##0.00';if(cn===3||cn===5)cell.numFmt='#,##0';});
+      });
+      /* subtotal ถ้ามีหลายขนาด */
+      if(lenKeys.length>1){
+        var rTotLen=r.bars.reduce(function(s,b){return s+b.barLen;},0);
+        var rTotWaste=r.bars.reduce(function(s,b){return s+(b.barLen-b.used);},0);
+        var rEff=rTotLen>0?(1-rTotWaste/rTotLen)*100:0;
+        var sub=wsum.addRow(['  ↳ รวม '+r.prof.name,'—',r.bars.length,rTotLen/1000,rTotWaste,rEff.toFixed(1)+'%']);sub.height=20;
+        sub.eachCell(function(cell,cn){cell.font={name:FONT,size:SZ,italic:true,color:{argb:'FF2E75B6'}};cell.alignment={horizontal:cn>=2?'right':'left',vertical:'middle'};cell.border=tbk;cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFD6E4F0'}};if(cn===4)cell.numFmt='#,##0.00';if(cn===3||cn===5)cell.numFmt='#,##0';});
+      }
+    });
+    var grandEff=grandLen>0?(1-grandWaste/grandLen)*100:0;
+    var gRow=wsum.addRow(['รวมทั้งหมด','—',grandCnt,grandLen/1000,grandWaste,grandEff.toFixed(1)+'%']);gRow.height=24;
+    gRow.eachCell(function(cell,cn){cell.font={name:FONT,size:SZ,bold:true};cell.alignment={horizontal:cn>=2?'right':'left',vertical:'middle'};cell.border={top:{style:'medium',color:{argb:'FF1F4E79'}},left:tbk,bottom:{style:'medium',color:{argb:'FF1F4E79'}},right:tbk};cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFFFD966'}};if(cn===4)cell.numFmt='#,##0.00';if(cn===3||cn===5)cell.numFmt='#,##0';});
+  }
+
+  /* ── Sheet 2: รายการชิ้นงาน ── */
+  var ws1=wb.addWorksheet('รายการชิ้นงาน');ws1.columns=[{key:'a',width:18},{key:'b',width:18},{key:'c',width:14},{key:'d',width:14}];
+  var hdr=ws1.addRow(['ชุด','Profile','ขนาด (mm)','จำนวน']);hdr.height=22;
+  hdr.eachCell(function(cell,cn){cell.font={name:FONT,size:SZ,bold:true,color:{argb:'FFFFFFFF'}};cell.alignment={horizontal:'center',vertical:'middle'};cell.border=tbk;cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF1F4E79'}};});
+  validPieces.forEach(function(p,pi){var prof=profiles.find(function(x){return x.id===p.profId;});var row=ws1.addRow([p.label,prof?prof.name:'',p.size,p.qty]);row.height=20;row.eachCell(function(cell,cn){cell.font={name:FONT,size:SZ};cell.alignment={horizontal:cn>=3?'right':'left',vertical:'middle'};cell.border=tbk;cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:pi%2===0?'FFFFFFFF':'FFF5F8FC'}};if(cn>=3)cell.numFmt='#,##0';});});
+
+  /* ── Sheets: แผนตัดแต่ละ profile ── */
+  if(allResults){
+    allResults.forEach(function(r){
+      var shName=(r.prof.name||'แผน').substring(0,25).replace(/[\/\\?*\[\]:]/g,'');
+      var ws=wb.addWorksheet(shName);ws.columns=[{key:'a',width:10},{key:'b',width:22},{key:'c',width:14},{key:'d',width:14},{key:'e',width:14},{key:'f',width:12}];
+      var h=ws.addRow(['เส้นที่','ชิ้นงาน','ขนาด (mm)','รวมใช้ (mm)','เศษ (mm)','เศษ (%)']);h.height=22;
+      h.eachCell(function(cell){cell.font={name:FONT,size:SZ,bold:true,color:{argb:'FFFFFFFF'}};cell.alignment={horizontal:'center',vertical:'middle'};cell.border=tbk;cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF1F4E79'}};});
+      r.bars.forEach(function(bar,i){
+        var usable=bar.barLen-2*END_TRIM,waste=usable-bar.used,wastePct=((waste/usable)*100).toFixed(1)+'%';
+        var piecesStr=bar.pieces.map(function(p){return p.label?(p.label+' '+fmtN(p.size)):fmtN(p.size);}).join(' / ');
+        var szList=bar.pieces.map(function(p){return p.size;}).join(', ');
+        var row=ws.addRow([i+1,piecesStr,szList,bar.used,waste,wastePct]);row.height=20;
+        row.eachCell(function(cell,cn){cell.font={name:FONT,size:SZ-1};cell.alignment={horizontal:cn>=3?'right':'left',vertical:'middle',wrapText:cn===2};cell.border=tbk;if(cn>=4)cell.numFmt='#,##0';});
+        if(i%2===0){row.eachCell(function(cell){cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFDEEAF1'}};});}
+      });
+      var tw=r.bars.reduce(function(s,b){return s+(b.barLen-b.used);},0),tUsed=r.bars.reduce(function(s,b){return s+b.used;},0),tLen=r.bars.reduce(function(s,b){return s+b.barLen;},0);
+      var tot=ws.addRow(['รวม','','',tUsed,tw,((tw/tLen)*100).toFixed(1)+'%']);tot.height=22;
+      tot.eachCell(function(cell,cn){cell.font={name:FONT,size:SZ,bold:true};cell.alignment={horizontal:cn>=3?'right':'left',vertical:'middle'};cell.border={top:{style:'medium'},left:tbk,bottom:{style:'medium'},right:tbk};cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFFFF2CC'}};if(cn>=4)cell.numFmt='#,##0';});
+    });
+  }
+  var buf=await wb.xlsx.writeBuffer();var blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.download=filename;a.click();URL.revokeObjectURL(url);
+}
+
+/* ── Utils ── */
+function fmtN(n){return(n==null||isNaN(n))?'-':Number(n).toLocaleString('th-TH');}
+function escH(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function escA(s){return String(s||'').replace(/"/g,'&quot;');}
+
+/* ── Init ── */
+function exportProject(){
+  var snap=getSnap();
+  var obj={
+    name:curProjName,
+    exportedAt:new Date().toISOString(),
+    version:'1.0',
+    profiles:snap.profiles,
+    pieces:snap.pieces
+  };
+  var json=JSON.stringify(obj,null,2);
+  var blob=new Blob([json],{type:'application/json'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;
+  var safeName=curProjName.replace(/[^a-zA-Z0-9ก-๙\-_ ]/g,'_');
+  a.download='project_'+safeName+'_'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importProject(event){
+  var file=event.target.files[0];
+  if(!file)return;
+  event.target.value='';
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var obj=JSON.parse(e.target.result);
+      if(!obj.profiles||!obj.pieces){alert('ไฟล์ไม่ถูกต้อง กรุณาใช้ไฟล์ .json ที่ export จากโปรแกรมนี้');return;}
+      if(pieces.length>0||profiles.length>0){
+        if(!confirm('Import จะแทนที่ข้อมูลปัจจุบัน ต้องการดำเนินการต่อไหม?'))return;
+      }
+      curProjId=null;
+      curProjName=obj.name||'Imported Project';
+      applySnap({profiles:obj.profiles,pieces:obj.pieces});
+      setProjBar(false,null);
+      alert('Import สำเร็จ! โปรเจกต์: '+curProjName+' | '+obj.profiles.length+' โปรไฟล์, '+obj.pieces.length+' รายการ | กด บันทึก เพื่อเก็บลงใน browser');
+    }catch(err){
+      alert('เกิดข้อผิดพลาด: '+err.message);
+    }
+  };
+  reader.readAsText(file,'utf-8');
+}
+
+async function init(){try{await openDB();}catch(ex){console.warn('IndexedDB:',ex);}addProfileData('รายการตัด','6400',2);updatePieceDropdowns();}
+init();
+
+
+// ── Bridge: Send from Processor to Optimizer ──
+function sendToAdvance(){
+  if(!allData.length){alert('ไม่มีข้อมูล กรุณาประมวลผลไฟล์ก่อน');return;}
+  pieces=[];document.getElementById('pieceBody').innerHTML='';rid=0;
+  document.getElementById('results').classList.add('hidden');
+  document.getElementById('optSection').classList.add('hidden');
+  lastResult=null;lastOptResult=null;
+  var added=0;
+  allData.forEach(function(r){
+    var profName=r.profile.replace(/^\d+\.\s*/,'');
+    var prof=profiles.find(function(p){return p.name===profName;});
+    if(!prof&&profName){prof=addProfileData(profName,'6400',2);updatePieceDropdowns();}
+    if(!prof)prof=profiles[0];
+    if(prof){addRow(prof.id,r.code,r.size,r.qty);added++;}
+  });
+  updateSummary();
+  document.getElementById('importedBadge').style.display='block';
+  document.getElementById('importedCount').textContent=added;
+  document.getElementById('badge2').textContent=added;
+  document.getElementById('badge2').classList.remove('dim');
+  switchTab(2);
+  alert('นำเข้า '+added+' รายการไปยัง Advance Optimizer เรียบร้อยครับ!');
+}
+
+function exportProject(){
+  var snap=getSnap();
+  var obj={
+    name:curProjName,
+    exportedAt:new Date().toISOString(),
+    version:'1.0',
+    profiles:snap.profiles,
+    pieces:snap.pieces
+  };
+  var json=JSON.stringify(obj,null,2);
+  var blob=new Blob([json],{type:'application/json'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;
+  var safeName=curProjName.replace(/[^a-zA-Z0-9ก-๙\-_ ]/g,'_');
+  a.download='project_'+safeName+'_'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importProject(event){
+  var file=event.target.files[0];
+  if(!file)return;
+  event.target.value='';
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var obj=JSON.parse(e.target.result);
+      if(!obj.profiles||!obj.pieces){alert('ไฟล์ไม่ถูกต้อง กรุณาใช้ไฟล์ .json ที่ export จากโปรแกรมนี้');return;}
+      if(pieces.length>0||profiles.length>0){
+        if(!confirm('Import จะแทนที่ข้อมูลปัจจุบัน ต้องการดำเนินการต่อไหม?'))return;
+      }
+      curProjId=null;
+      curProjName=obj.name||'Imported Project';
+      applySnap({profiles:obj.profiles,pieces:obj.pieces});
+      setProjBar(false,null);
+      alert('Import สำเร็จ! โปรเจกต์: '+curProjName+' | '+obj.profiles.length+' โปรไฟล์, '+obj.pieces.length+' รายการ | กด บันทึก เพื่อเก็บลงใน browser');
+    }catch(err){
+      alert('เกิดข้อผิดพลาด: '+err.message);
+    }
+  };
+  reader.readAsText(file,'utf-8');
+}
+
+async function init(){try{await openDB();}catch(ex){console.warn('IndexedDB:',ex);}addProfileData('รายการตัด','6400',2);updatePieceDropdowns();}
+init();
+</script>
+</body>
+</html>
