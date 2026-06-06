@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>APA — Aluminum Profile Optimizer</title>
+
+  <!-- Google Fonts: Sarabun -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Material Symbols -->
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+
+  <!-- SheetJS -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <link rel="stylesheet" href="css/main.css" />
+</head>
+<body>
+
+<!-- ───────────────────────── NAV ───────────────────────── -->
+<header class="app-header">
+  <div class="app-header__inner">
+    <div class="app-logo">
+      <span class="app-logo__hex">⬡</span>
+      <span class="app-logo__name">APA</span>
+      <span class="app-logo__sub">Aluminum Profile Optimizer</span>
+    </div>
+    <nav class="app-tabs" role="tablist">
+      <button class="tab-btn" id="btn-tab1" role="tab" aria-selected="false" data-tab="page1">
+        <span class="material-symbols-outlined">table_chart</span>
+        <span>Processor</span>
+        <span class="tab-badge" id="badge-proc">0</span>
+      </button>
+      <button class="tab-btn tab-btn--active" id="btn-tab2" role="tab" aria-selected="true" data-tab="page2">
+        <span class="material-symbols-outlined">straighten</span>
+        <span>Standard</span>
+        <span class="tab-badge" id="badge-std">0</span>
+      </button>
+      <button class="tab-btn" id="btn-tab3" role="tab" aria-selected="false" data-tab="page3">
+        <span class="material-symbols-outlined">auto_fix_high</span>
+        <span>Auto</span>
+        <span class="tab-badge" id="badge-auto">0</span>
+      </button>
+    </nav>
+  </div>
+</header>
+
+<!-- ───────────────────────── PAGE 1: PROCESSOR ───────────────────────── -->
+<main>
+<section id="page1" class="page" hidden>
+  <div class="container">
+
+    <div class="page-hero page-hero--blue">
+      <span class="material-symbols-outlined page-hero__icon">table_chart</span>
+      <div>
+        <h1 class="page-hero__title">Profile Processor</h1>
+        <p class="page-hero__sub">นำเข้าข้อมูลการตัดจากไฟล์ Excel</p>
+      </div>
+    </div>
+
+    <!-- Drop zone -->
+    <div class="card">
+      <div class="drop-zone" id="dropZone">
+        <span class="material-symbols-outlined drop-zone__icon">upload_file</span>
+        <p class="drop-zone__text">ลากไฟล์ Excel มาวางที่นี่ หรือ</p>
+        <label class="btn btn--primary" for="fileInput">เลือกไฟล์</label>
+        <input type="file" id="fileInput" accept=".xlsx,.xls" hidden />
+      </div>
+      <div id="fileInfo" class="file-info" hidden>
+        <span class="material-symbols-outlined">description</span>
+        <span id="fileName"></span>
+        <span id="fileSize" class="text-muted"></span>
+      </div>
+      <div class="action-row" style="margin-top:12px;">
+        <button class="btn btn--primary" id="btnProcess">
+          <span class="material-symbols-outlined">play_arrow</span> ประมวลผลไฟล์
+        </button>
+        <button class="btn btn--ghost" id="btnClearProc">
+          <span class="material-symbols-outlined">delete</span> ล้างทั้งหมด
+        </button>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row" id="procStats" hidden>
+      <div class="stat-card"><div class="stat-card__val" id="statSheets">0</div><div class="stat-card__label">Sheets</div></div>
+      <div class="stat-card"><div class="stat-card__val" id="statCodes">0</div><div class="stat-card__label">Codes</div></div>
+      <div class="stat-card"><div class="stat-card__val" id="statItems">0</div><div class="stat-card__label">Items</div></div>
+      <div class="stat-card"><div class="stat-card__val" id="statQty">0</div><div class="stat-card__label">Total Qty</div></div>
+    </div>
+
+    <!-- Filter + Table -->
+    <div class="card" id="procTableCard" hidden>
+      <div class="table-toolbar">
+        <input type="text" class="input" id="procFilter" placeholder="ค้นหา..." style="width:260px;" />
+        <button class="btn btn--success" id="btnSendToOpt">
+          <span class="material-symbols-outlined">send</span> ส่งไป Optimizer
+        </button>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table" id="procTable">
+          <thead>
+            <tr>
+              <th data-col="sheet" class="sortable">Sheet <span class="sort-icon">↕</span></th>
+              <th data-col="code" class="sortable">Code <span class="sort-icon">↕</span></th>
+              <th data-col="profile" class="sortable">โปรไฟล์ <span class="sort-icon">↕</span></th>
+              <th data-col="size" class="sortable">ขนาด (mm) <span class="sort-icon">↕</span></th>
+              <th data-col="qty" class="sortable">จำนวน <span class="sort-icon">↕</span></th>
+            </tr>
+          </thead>
+          <tbody id="procTbody"></tbody>
+        </table>
+      </div>
+      <div class="pagination" id="procPagination"></div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ───────────────────────── PAGE 2: STANDARD ───────────────────────── -->
+<section id="page2" class="page">
+  <div class="container">
+
+    <div class="page-hero page-hero--blue">
+      <span class="material-symbols-outlined page-hero__icon">straighten</span>
+      <div>
+        <h1 class="page-hero__title">Standard Optimizer</h1>
+        <p class="page-hero__sub">คำนวณแผนตัดด้วยความยาวเส้นจาก Profile</p>
+      </div>
+    </div>
+
+    <!-- Project bar -->
+    <div class="project-bar card">
+      <div class="project-bar__name">
+        <span class="material-symbols-outlined">folder_open</span>
+        <span id="projNameDisplay">โปรเจกต์ใหม่</span>
+        <span class="proj-unsaved" id="projUnsaved" hidden>●</span>
+      </div>
+      <div class="project-bar__actions">
+        <button class="btn btn--sm" id="btnNew"><span class="material-symbols-outlined">add</span> ใหม่</button>
+        <button class="btn btn--sm" id="btnOpen"><span class="material-symbols-outlined">folder_open</span> เปิด</button>
+        <button class="btn btn--sm btn--primary" id="btnSave"><span class="material-symbols-outlined">save</span> บันทึก</button>
+        <button class="btn btn--sm" id="btnExportJson"><span class="material-symbols-outlined">download</span> Export</button>
+        <button class="btn btn--sm" id="btnImportJson"><span class="material-symbols-outlined">upload</span> Import</button>
+        <input type="file" id="importJsonInput" accept=".json" hidden />
+      </div>
+    </div>
+
+    <!-- Profile table -->
+    <div class="card">
+      <div class="card__header">
+        <span class="material-symbols-outlined">view_list</span>
+        <h2 class="card__title">โปรไฟล์อะลูมิเนียม</h2>
+      </div>
+      <div class="notice notice--warning">
+        <span class="material-symbols-outlined">warning</span>
+        ตัดทิ้งหัว-ท้าย 75 mm × 2 = <strong>150 mm/เส้น</strong>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ชื่อโปรไฟล์</th>
+              <th>ความยาวเส้น (mm)</th>
+              <th>จำนวนเส้น (Stock)</th>
+              <th>Kerf (mm)</th>
+              <th style="width:40px;"></th>
+            </tr>
+          </thead>
+          <tbody id="profTbody2"></tbody>
+        </table>
+      </div>
+      <button class="btn btn--ghost btn--sm" id="btnAddProfile2" style="margin-top:8px;">
+        <span class="material-symbols-outlined">add</span> เพิ่มโปรไฟล์
+      </button>
+    </div>
+
+    <!-- Sizes-per-bar + Calculate -->
+    <div class="action-bar">
+      <div class="sizes-per-bar">
+        <span class="material-symbols-outlined">lock</span>
+        <span>ขนาดที่ต่างกันได้/เส้น:</span>
+        <div class="toggle-group" id="sizesPerBar">
+          <button class="toggle-btn" data-val="1">1</button>
+          <button class="toggle-btn toggle-btn--active" data-val="2">2</button>
+          <button class="toggle-btn" data-val="3">3</button>
+        </div>
+      </div>
+      <button class="btn btn--primary btn--lg" id="btnCalcStd">
+        <span class="material-symbols-outlined">calculate</span> คำนวณ Standard
+      </button>
+    </div>
+
+    <!-- Piece table -->
+    <div class="card">
+      <div class="card__header">
+        <span class="material-symbols-outlined">format_list_bulleted</span>
+        <h2 class="card__title">รายการชิ้นงาน</h2>
+      </div>
+      <div class="table-toolbar">
+        <button class="btn btn--sm btn--primary" id="btnAddPiece2">
+          <span class="material-symbols-outlined">add</span> เพิ่มรายการ
+        </button>
+        <button class="btn btn--sm" id="btnImportExcel2">
+          <span class="material-symbols-outlined">upload_file</span> Import Excel
+        </button>
+        <input type="file" id="importExcel2Input" accept=".xlsx,.xls" hidden />
+        <button class="btn btn--sm" id="btnLoadSample">
+          <span class="material-symbols-outlined">science</span> ตัวอย่าง
+        </button>
+        <button class="btn btn--ghost btn--sm" id="btnClearPieces">
+          <span class="material-symbols-outlined">delete</span> ล้าง
+        </button>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>โปรไฟล์</th>
+              <th>ชื่อ/รหัส</th>
+              <th>ขนาด (mm)</th>
+              <th>จำนวน</th>
+              <th>รวม (mm)</th>
+              <th style="width:40px;"></th>
+            </tr>
+          </thead>
+          <tbody id="pieceTbody2"></tbody>
+        </table>
+      </div>
+      <div class="summary-row" id="pieceSummary2">—</div>
+    </div>
+
+    <!-- Results -->
+    <div id="stdResults" hidden></div>
+
+  </div>
+</section>
+
+<!-- ───────────────────────── PAGE 3: AUTO ───────────────────────── -->
+<section id="page3" class="page" hidden>
+  <div class="container">
+
+    <div class="page-hero page-hero--green">
+      <span class="material-symbols-outlined page-hero__icon">auto_fix_high</span>
+      <div>
+        <h1 class="page-hero__title">Auto Optimizer</h1>
+        <p class="page-hero__sub">ค้นหาความยาวเส้นที่ดีที่สุดอัตโนมัติ</p>
+      </div>
+    </div>
+
+    <!-- Profile table (mirrored) -->
+    <div class="card">
+      <div class="card__header">
+        <span class="material-symbols-outlined">view_list</span>
+        <h2 class="card__title">โปรไฟล์อะลูมิเนียม</h2>
+      </div>
+      <div class="notice notice--warning">
+        <span class="material-symbols-outlined">warning</span>
+        ตัดทิ้งหัว-ท้าย 75 mm × 2 = <strong>150 mm/เส้น</strong>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ชื่อโปรไฟล์</th>
+              <th>ความยาวเส้น (mm)</th>
+              <th>จำนวนเส้น (Stock)</th>
+              <th>Kerf (mm)</th>
+              <th style="width:40px;"></th>
+            </tr>
+          </thead>
+          <tbody id="profTbody3"></tbody>
+        </table>
+      </div>
+      <button class="btn btn--ghost btn--sm" id="btnAddProfile3" style="margin-top:8px;">
+        <span class="material-symbols-outlined">add</span> เพิ่มโปรไฟล์
+      </button>
+    </div>
+
+    <!-- Max bar levels + Calculate -->
+    <div class="action-bar action-bar--green">
+      <div class="sizes-per-bar">
+        <span class="material-symbols-outlined">layers</span>
+        <span>ขนาดเส้นสูงสุด:</span>
+        <div class="toggle-group" id="maxBarLevels">
+          <button class="toggle-btn" data-val="2">2</button>
+          <button class="toggle-btn" data-val="3">3</button>
+          <button class="toggle-btn toggle-btn--active toggle-btn--green" data-val="4">4</button>
+          <button class="toggle-btn" data-val="5">5</button>
+          <button class="toggle-btn" data-val="6">6</button>
+        </div>
+      </div>
+      <button class="btn btn--success btn--lg" id="btnCalcAuto">
+        <span class="material-symbols-outlined">auto_fix_high</span> คำนวณ + Auto-Optimize
+      </button>
+    </div>
+
+    <!-- Progress -->
+    <div id="autoProgress" hidden class="card">
+      <p id="autoProgressLabel" style="margin-bottom:8px;font-size:14px;">กำลังคำนวณ...</p>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar" id="autoProgressBar" style="width:0%"></div>
+      </div>
+    </div>
+
+    <!-- Piece table (mirrored) -->
+    <div class="card">
+      <div class="card__header">
+        <span class="material-symbols-outlined">format_list_bulleted</span>
+        <h2 class="card__title">รายการชิ้นงาน</h2>
+      </div>
+      <div class="table-toolbar">
+        <button class="btn btn--sm btn--primary" id="btnAddPiece3">
+          <span class="material-symbols-outlined">add</span> เพิ่มรายการ
+        </button>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>โปรไฟล์</th>
+              <th>ชื่อ/รหัส</th>
+              <th>ขนาด (mm)</th>
+              <th>จำนวน</th>
+              <th>รวม (mm)</th>
+              <th style="width:40px;"></th>
+            </tr>
+          </thead>
+          <tbody id="pieceTbody3"></tbody>
+        </table>
+      </div>
+      <div class="summary-row" id="pieceSummary3">—</div>
+    </div>
+
+    <!-- Results -->
+    <div id="autoResults" hidden></div>
+
+  </div>
+</section>
+</main>
+
+<!-- ───────────────────────── MODALS ───────────────────────── -->
+
+<!-- Save modal -->
+<div class="modal-backdrop" id="modalSave" hidden>
+  <div class="modal">
+    <div class="modal__header">
+      <h3>บันทึกโปรเจกต์</h3>
+      <button class="modal__close" data-close="modalSave"><span class="material-symbols-outlined">close</span></button>
+    </div>
+    <div class="modal__body">
+      <label class="form-label">ชื่อโปรเจกต์</label>
+      <input type="text" class="input" id="saveNameInput" placeholder="กรอกชื่อโปรเจกต์..." />
+    </div>
+    <div class="modal__footer">
+      <button class="btn btn--ghost" data-close="modalSave">ยกเลิก</button>
+      <button class="btn btn--primary" id="btnDoSave">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Open modal -->
+<div class="modal-backdrop" id="modalOpen" hidden>
+  <div class="modal">
+    <div class="modal__header">
+      <h3>เปิดโปรเจกต์</h3>
+      <button class="modal__close" data-close="modalOpen"><span class="material-symbols-outlined">close</span></button>
+    </div>
+    <div class="modal__body">
+      <div id="projectList" class="project-list"></div>
+    </div>
+    <div class="modal__footer">
+      <button class="btn btn--ghost" data-close="modalOpen">ปิด</button>
+    </div>
+  </div>
+</div>
+
+<!-- Stock warning modal -->
+<div class="modal-backdrop" id="modalStockWarn" hidden>
+  <div class="modal">
+    <div class="modal__header">
+      <h3>⚠ สต็อกไม่เพียงพอ</h3>
+      <button class="modal__close" data-close="modalStockWarn"><span class="material-symbols-outlined">close</span></button>
+    </div>
+    <div class="modal__body" id="stockWarnBody"></div>
+    <div class="modal__footer">
+      <button class="btn btn--primary" data-close="modalStockWarn">ตกลง</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
